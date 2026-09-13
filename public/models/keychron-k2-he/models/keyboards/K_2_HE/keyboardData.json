@@ -1,0 +1,1511 @@
+{
+  "websiteLink": "https://www.keychron.com/collections/75-layout-keyboards/products/keychron-k2-he-wireless-magnetic-switch-keyboard",
+  "colorSets": {
+    "White": {
+      "name": "White",
+      "colorSet": {
+        "highlightColor": {
+          "keycapColor": "#D9AE74",
+          "fontColor": "#fff"
+        },
+        "primaryColor": {
+          "keycapColor": "#F2F2F0",
+          "fontColor": "#000"
+        },
+        "secondaryColor": {
+          "keycapColor": "#F2F2F0",
+          "fontColor": "#000"
+        },
+        "caseColor": "#F2F2F0",
+        "plateColor": "#eee",
+        "UIColor": ["#D9AE74", "#fff"]
+      }
+    },
+    "PureWhite": {
+      "name": "PureWhite",
+      "colorSet": {
+        "highlightColor": {
+          "keycapColor": "#F2F2F0",
+          "fontColor": "#000"
+        },
+        "primaryColor": {
+          "keycapColor": "#F2F2F0",
+          "fontColor": "#000"
+        },
+        "secondaryColor": {
+          "keycapColor": "#F2F2F0",
+          "fontColor": "#000"
+        },
+        "caseColor": "#F2F2F0",
+        "plateColor": "#eee",
+        "UIColor": ["#fff", "#fff"]
+      }
+    },
+    "Black": {
+      "name": "Black",
+      "colorSet": {
+        "highlightColor": {
+          "keycapColor": "#D9AE74",
+          "fontColor": "#ffffff"
+        },
+        "primaryColor": {
+          "keycapColor": "#222",
+          "fontColor": "#fff"
+        },
+        "secondaryColor": {
+          "keycapColor": "#222",
+          "fontColor": "#fff"
+        },
+        "caseColor": "#000000",
+        "plateColor": "#333",
+        "UIColor": ["#D9AE74", "#333"]
+      }
+    },
+    "PureBlack": {
+      "name": "PureBlack",
+      "colorSet": {
+        "highlightColor": {
+          "keycapColor": "#222",
+          "fontColor": "#ffffff"
+        },
+        "primaryColor": {
+          "keycapColor": "#222",
+          "fontColor": "#fff"
+        },
+        "secondaryColor": {
+          "keycapColor": "#222",
+          "fontColor": "#fff"
+        },
+        "caseColor": "#000000",
+        "plateColor": "#333",
+        "UIColor": ["#333", "#333"]
+      }
+    }
+  },
+  "keycapTextures": [
+    {
+      "name": "",
+      "thumbnail": "",
+      "url": ""
+    }
+  ],
+  "switchOption": ["Gateron Double-Rail Magnetic Nebula Switch"],
+  "keycapOption": ["KSA"],
+  "centerKey": "KeyJ",
+  "keycapUVOffsetScale": [0.5, 0.49, 32.04, 12.79],
+  "switchOrientation": "north",
+  "keyboardOffset": [0, -0.37, 0],
+  "unfoldText": {
+    "topCaseQ": {
+      "title": "Top Case",
+      "detailText": "All-aluminum body"
+    },
+    "topCaseK": {
+      "title": "Top Case",
+      "detailText": "All-aluminum body"
+    },
+    "switches": {
+      "title": "Magnetic Switches",
+      "detailText": "3x4, 3.5mm, Hot-swappable"
+    },
+    "keyCaps": {
+      "title": "PBT Keycaps",
+      "detailText": "OSA Profile Double-shot PBT Keycaps, rounded shape -> comfortable"
+    },
+    "knob": {
+      "title": "Knob",
+      "detailText": "Designed to enhance your creative workflow, the premium rotary encoder allows you to customize your favorite keys and macros through the innovative VIA software with ease."
+    },
+    "battery": {
+      "title": "Battery",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "pcb": {
+      "title": "PCB",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "stablizer": {
+      "title": "Stablizer",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "plate": {
+      "title": "Plate",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "plateFoam": {
+      "title": "Plate Foam",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "siliconeAcousticPad": {
+      "title": "Acoustic Pad",
+      "detailText": "Battery that last for 1 month usage"
+    },
+    "gasket": {
+      "title": "Double-Gasket",
+      "detailText": "Silicone pads between the top and bottom cases reduce acoustic resonance, maintaining gasket flexibility and enhancing typing sound."
+    },
+    "bottomCase": {
+      "title": "Bottom Case",
+      "detailText": ""
+    }
+  },
+  "keyPosition": {
+    "AltLeft": {
+      "key": "AltLeft",
+      "position": {
+        "x": -9.272500991821289,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6_meta",
+      "row": 6,
+      "isBump": false,
+      "random": 0.9706196043319638
+    },
+    "AltRight": {
+      "key": "AltRight",
+      "position": {
+        "x": 4.747499465942383,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.9049652159461816
+    },
+    "ArrowDown": {
+      "key": "ArrowDown",
+      "position": {
+        "x": 12.34749984741211,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.35996503022212845
+    },
+    "ArrowLeft": {
+      "key": "ArrowLeft",
+      "position": {
+        "x": 10.447500228881836,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.05516855895573847
+    },
+    "ArrowRight": {
+      "key": "ArrowRight",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.6318210654094824
+    },
+    "ArrowUp": {
+      "key": "ArrowUp",
+      "position": {
+        "x": 12.34749984741211,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": true,
+      "random": 0.7004878296458465
+    },
+    "Backquote": {
+      "key": "Backquote",
+      "position": {
+        "x": -14.252500534057617,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.8124293923411833
+    },
+    "Backslash": {
+      "key": "Backslash",
+      "position": {
+        "x": 11.87350082397461,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3_tab",
+      "row": 3,
+      "isBump": false,
+      "random": 0.5506509622487012
+    },
+    "Backspace": {
+      "key": "Backspace",
+      "position": {
+        "x": 11.397499084472656,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2_backspace",
+      "row": 2,
+      "isBump": false,
+      "random": 0.5364110662398468
+    },
+    "BracketLeft": {
+      "key": "BracketLeft",
+      "position": {
+        "x": 7.600500106811523,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.49841434172955157
+    },
+    "BracketRight": {
+      "key": "BracketRight",
+      "position": {
+        "x": 9.500499725341797,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.7016502281116962
+    },
+    "CapsLock": {
+      "key": "CapsLock",
+      "position": {
+        "x": -13.538000106811523,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4_capslock",
+      "row": 4,
+      "isBump": false,
+      "random": 0.14832982062682587
+    },
+    "Comma": {
+      "key": "Comma",
+      "position": {
+        "x": 3.3270015716552734,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.47034942177855843
+    },
+    "ControlLeft": {
+      "key": "ControlLeft",
+      "position": {
+        "x": -14.014500617980957,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6_meta",
+      "row": 6,
+      "isBump": false,
+      "random": 0.2655560136372833
+    },
+    "ControlRight": {
+      "key": "ControlRight",
+      "position": {
+        "x": 8.547500610351562,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.9871106344753278
+    },
+    "Delete": {
+      "key": "Delete",
+      "position": {
+        "x": 12.353200912475586,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.1446437665160193
+    },
+    "Digit0": {
+      "key": "Digit0",
+      "position": {
+        "x": 4.747499465942383,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.3331088235131825
+    },
+    "Digit1": {
+      "key": "Digit1",
+      "position": {
+        "x": -12.352500915527344,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.4449107296695103
+    },
+    "Digit2": {
+      "key": "Digit2",
+      "position": {
+        "x": -10.452500343322754,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.6624331131606143
+    },
+    "Digit3": {
+      "key": "Digit3",
+      "position": {
+        "x": -8.552499771118164,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.14382373990120167
+    },
+    "Digit4": {
+      "key": "Digit4",
+      "position": {
+        "x": -6.652500629425049,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.34525379697519964
+    },
+    "Digit5": {
+      "key": "Digit5",
+      "position": {
+        "x": -4.752469062805176,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.7674835725909405
+    },
+    "Digit6": {
+      "key": "Digit6",
+      "position": {
+        "x": -2.8524999618530273,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.25770219351651114
+    },
+    "Digit7": {
+      "key": "Digit7",
+      "position": {
+        "x": -0.9525003433227539,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.9757222145634739
+    },
+    "Digit8": {
+      "key": "Digit8",
+      "position": {
+        "x": 0.9474992752075195,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.46426975542842197
+    },
+    "Digit9": {
+      "key": "Digit9",
+      "position": {
+        "x": 2.8474998474121094,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.33666497608211554
+    },
+    "Enter": {
+      "key": "Enter",
+      "position": {
+        "x": 11.159749984741211,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4_enter",
+      "row": 4,
+      "isBump": false,
+      "random": 0.0024986748703703654
+    },
+    "Equal": {
+      "key": "Equal",
+      "position": {
+        "x": 8.547500610351562,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.5778754383638885
+    },
+    "Escape": {
+      "key": "Escape",
+      "position": {
+        "x": -14.252500534057617,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.8770946640681945
+    },
+    "F1": {
+      "key": "F1",
+      "position": {
+        "x": -12.352500915527344,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.6823545540489719
+    },
+    "F2": {
+      "key": "F2",
+      "position": {
+        "x": -10.452500343322754,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.11068114012137265
+    },
+    "F3": {
+      "key": "F3",
+      "position": {
+        "x": -8.552499771118164,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.8939506189815783
+    },
+    "F4": {
+      "key": "F4",
+      "position": {
+        "x": -6.652500629425049,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.48254374153809765
+    },
+    "F5": {
+      "key": "F5",
+      "position": {
+        "x": -4.752500534057617,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.4856357494808109
+    },
+    "F6": {
+      "key": "F6",
+      "position": {
+        "x": -2.8524999618530273,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.07051787590280834
+    },
+    "F7": {
+      "key": "F7",
+      "position": {
+        "x": -0.9525003433227539,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.010775374941618843
+    },
+    "F8": {
+      "key": "F8",
+      "position": {
+        "x": 0.9474992752075195,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.35365758473493714
+    },
+    "F9": {
+      "key": "F9",
+      "position": {
+        "x": 2.8474998474121094,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.9952304078791038
+    },
+    "F10": {
+      "key": "F10",
+      "position": {
+        "x": 4.747499465942383,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.034102803449886365
+    },
+    "F11": {
+      "key": "F11",
+      "position": {
+        "x": 6.647499084472656,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.5253303880550753
+    },
+    "F12": {
+      "key": "F12",
+      "position": {
+        "x": 8.547500610351562,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.0728274060735924
+    },
+    "Fn": {
+      "key": "Fn",
+      "position": {
+        "x": 6.647499084472656,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6",
+      "row": 6,
+      "isBump": false,
+      "random": 0.2385198092457318
+    },
+    "Home": {
+      "key": "Home",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.8956320642711115
+    },
+    "KeyA": {
+      "key": "KeyA",
+      "position": {
+        "x": -10.928000450134277,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.8851984607819683
+    },
+    "KeyB": {
+      "key": "KeyB",
+      "position": {
+        "x": -2.373000144958496,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.5144908691847072
+    },
+    "KeyC": {
+      "key": "KeyC",
+      "position": {
+        "x": -6.173000335693359,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.641168944954492
+    },
+    "KeyD": {
+      "key": "KeyD",
+      "position": {
+        "x": -7.128000259399414,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.7193138159097331
+    },
+    "KeyE": {
+      "key": "KeyE",
+      "position": {
+        "x": -7.59950065612793,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.8242659911243134
+    },
+    "KeyF": {
+      "key": "KeyF",
+      "position": {
+        "x": -5.227999687194824,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": true,
+      "random": 0.9552547146509959
+    },
+    "KeyG": {
+      "key": "KeyG",
+      "position": {
+        "x": -3.328000068664551,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.6710795256537462
+    },
+    "KeyH": {
+      "key": "KeyH",
+      "position": {
+        "x": -1.4280004501342773,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.6340385708454674
+    },
+    "KeyI": {
+      "key": "KeyI",
+      "position": {
+        "x": 1.9004993438720703,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.4379306259750293
+    },
+    "KeyJ": {
+      "key": "KeyJ",
+      "position": {
+        "x": 0.4719991683959961,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": true,
+      "random": 0.5998159103257472
+    },
+    "KeyK": {
+      "key": "KeyK",
+      "position": {
+        "x": 2.371999740600586,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.9081059824522072
+    },
+    "KeyL": {
+      "key": "KeyL",
+      "position": {
+        "x": 4.271999359130859,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.9842240337963797
+    },
+    "KeyM": {
+      "key": "KeyM",
+      "position": {
+        "x": 1.4270009994506836,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.45642851235406434
+    },
+    "KeyN": {
+      "key": "KeyN",
+      "position": {
+        "x": -0.47299861907958984,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.5945168662736687
+    },
+    "KeyO": {
+      "key": "KeyO",
+      "position": {
+        "x": 3.8004989624023438,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.46682372988684495
+    },
+    "KeyP": {
+      "key": "KeyP",
+      "position": {
+        "x": 5.70050048828125,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.8486361358194975
+    },
+    "KeyQ": {
+      "key": "KeyQ",
+      "position": {
+        "x": -11.399500846862793,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.5954922543563929
+    },
+    "KeyR": {
+      "key": "KeyR",
+      "position": {
+        "x": -5.69950008392334,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.8782646996010159
+    },
+    "KeyS": {
+      "key": "KeyS",
+      "position": {
+        "x": -9.027999877929688,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.14290159339808772
+    },
+    "KeyT": {
+      "key": "KeyT",
+      "position": {
+        "x": -3.7995004653930664,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.8160265533922881
+    },
+    "KeyU": {
+      "key": "KeyU",
+      "position": {
+        "x": 0.000499725341796875,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.5959582438849771
+    },
+    "KeyV": {
+      "key": "KeyV",
+      "position": {
+        "x": -4.273000717163086,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.1677632650760006
+    },
+    "KeyW": {
+      "key": "KeyW",
+      "position": {
+        "x": -9.499500274658203,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.9826047293393916
+    },
+    "KeyX": {
+      "key": "KeyX",
+      "position": {
+        "x": -8.072999954223633,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.3845758958516581
+    },
+    "KeyY": {
+      "key": "KeyY",
+      "position": {
+        "x": -1.899500846862793,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.4892122018141203
+    },
+    "KeyZ": {
+      "key": "KeyZ",
+      "position": {
+        "x": -9.973000526428223,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.40191984268239
+    },
+    "LightMode": {
+      "key": "LightMode",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.14885254028815909
+    },
+    "MetaLeft": {
+      "key": "MetaLeft",
+      "position": {
+        "x": -11.643500328063965,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6_meta",
+      "row": 6,
+      "isBump": false,
+      "random": 0.7058974930318039
+    },
+    "Minus": {
+      "key": "Minus",
+      "position": {
+        "x": 6.647499084472656,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.9966508353976737
+    },
+    "PageDown": {
+      "key": "PageDown",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3",
+      "row": 3,
+      "isBump": false,
+      "random": 0.1410955725432943
+    },
+    "PageUp": {
+      "key": "PageUp",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": -2.8499579429626465
+      },
+      "capModel": "r2",
+      "row": 2,
+      "isBump": false,
+      "random": 0.32533993793022964
+    },
+    "Period": {
+      "key": "Period",
+      "position": {
+        "x": 5.227001190185547,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.8695229850297357
+    },
+    "Quote": {
+      "key": "Quote",
+      "position": {
+        "x": 8.071998596191406,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.3313801096085074
+    },
+    "Semicolon": {
+      "key": "Semicolon",
+      "position": {
+        "x": 6.171998977661133,
+        "y": 0.0,
+        "z": 0.9500422477722168
+      },
+      "capModel": "r4",
+      "row": 4,
+      "isBump": false,
+      "random": 0.05568589416328906
+    },
+    "ShiftLeft": {
+      "key": "ShiftLeft",
+      "position": {
+        "x": -13.062000274658203,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5_lshift",
+      "row": 5,
+      "isBump": false,
+      "random": 0.054083083960285716
+    },
+    "ShiftRight": {
+      "key": "ShiftRight",
+      "position": {
+        "x": 9.744499206542969,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5_rshift",
+      "row": 5,
+      "isBump": false,
+      "random": 0.9892080286493741
+    },
+    "Slash": {
+      "key": "Slash",
+      "position": {
+        "x": 7.12700080871582,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.9414844049675428
+    },
+    "Space": {
+      "key": "Space",
+      "position": {
+        "x": -2.123000144958496,
+        "y": 0.0,
+        "z": 4.750041961669922
+      },
+      "capModel": "r6_space",
+      "row": 6,
+      "isBump": false,
+      "random": 0.7064961772495051
+    },
+    "Tab": {
+      "key": "Tab",
+      "position": {
+        "x": -13.7760009765625,
+        "y": 0.0,
+        "z": -0.949958086013794
+      },
+      "capModel": "r3_tab",
+      "row": 3,
+      "isBump": false,
+      "random": 0.1334249708437898
+    },
+    "End": {
+      "key": "End",
+      "position": {
+        "x": 14.247499465942383,
+        "y": 0.0,
+        "z": 2.8500418663024902
+      },
+      "capModel": "r5",
+      "row": 5,
+      "isBump": false,
+      "random": 0.6091685383359868
+    },
+    "F13": {
+      "key": "F13",
+      "position": {
+        "x": 10.447500228881836,
+        "y": 0.0,
+        "z": -4.749958038330078
+      },
+      "capModel": "r1",
+      "row": 1,
+      "isBump": false,
+      "random": 0.8235869326270314
+    }
+  },
+  "screwSPosition": [
+    {
+      "px": -12.8720064163208,
+      "py": 2.6,
+      "pz": 4.955001354217529,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -12.450005531311035,
+      "py": 2.6,
+      "pz": 1.3900004625320435,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -1.078000545501709,
+      "py": 2.6,
+      "pz": 5.260001182556152,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 5.700002670288086,
+      "py": 2.6,
+      "pz": 4.955001354217529,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 13.300005912780762,
+      "py": 2.6,
+      "pz": 4.955001354217529,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 13.196006774902344,
+      "py": 2.6,
+      "pz": 0.2550000548362732,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 13.300005912780762,
+      "py": 2.6,
+      "pz": -4.655001163482666,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 5.700002670288086,
+      "py": 2.6,
+      "pz": -4.54500150680542,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": 4.753002166748047,
+      "py": 2.6,
+      "pz": -0.505000114440918,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -5.700002670288086,
+      "py": 2.6,
+      "pz": -4.54500150680542,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -7.348133563995361,
+      "py": 2.6,
+      "pz": -3.7684903144836426,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -13.300005912780762,
+      "py": 2.6,
+      "pz": -4.655001163482666,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -1.420500636100769,
+      "py": 2.6,
+      "pz": 3.2950010299682617,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    },
+    {
+      "px": -6.647003173828125,
+      "py": 2.6,
+      "pz": -0.5050001740455627,
+      "rx": 3.1415,
+      "ry": 0.0,
+      "rz": 0.0
+    }
+  ],
+  "unfoldIntervalDistance": 3,
+  "unfoldPosition": {
+    "keyCaps": {
+      "from": {
+        "x": 0,
+        "y": 2.6,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 30.2,
+        "z": 0
+      }
+    },
+    "switches": {
+      "from": {
+        "x": 0,
+        "y": 2.6,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 27.75,
+        "z": 0
+      }
+    },
+    "topCaseK": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 22.5,
+        "z": 0
+      }
+    },
+    "topCaseK_L": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": -3,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "topCaseK_R": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 3,
+        "y": 0,
+        "z": 0
+      }
+    },
+
+    "topCaseK_F": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "z": -3
+      }
+    },
+
+    "topCaseK_B": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "z": 3
+      }
+    },
+    "plate": {
+      "from": {
+        "x": 0,
+        "y": 2.42,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 21.3,
+        "z": 0
+      }
+    },
+    "foam": {
+      "from": {
+        "x": 0,
+        "y": 2.37,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 18.7,
+        "z": 0
+      }
+    },
+    "plateFoam": {
+      "from": {
+        "x": 0,
+        "y": 2.3,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 18.7,
+        "z": 0
+      }
+    },
+    "stablizer": {
+      "from": {
+        "x": 0,
+        "y": 2.0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 16,
+        "z": 0
+      }
+    },
+    "pcb": {
+      "from": {
+        "x": 0,
+        "y": 2.3,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 14.5,
+        "z": 0
+      }
+    },
+    "screwInternal": {
+      "from": {
+        "x": 0,
+        "y": -0.03,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 20,
+        "z": 0
+      }
+    },
+    "acousticPad": {
+      "from": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 9.5,
+        "z": 0
+      }
+    },
+    "siliconeAcousticPad": {
+      "from": {
+        "x": 0,
+        "y": 3,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 13,
+        "z": 0
+      }
+    },
+    "battery": {
+      "from": {
+        "x": -0.5,
+        "y": 1,
+        "z": -1.9
+      },
+      "target": {
+        "x": -0.5,
+        "y": 8,
+        "z": -1.9
+      }
+    },
+    "bottomCase": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 3,
+        "z": 0
+      }
+    },
+    "feet": {
+      "from": {
+        "x": 0,
+        "y": 0.6,
+        "z": 0
+      }
+    },
+    "rubberFeet": {
+      "from": {
+        "x": 0,
+        "y": 0.35,
+        "z": 0
+      }
+    },
+    "screwExternal": {
+      "from": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "target": {
+        "x": 0,
+        "y": 0.1,
+        "z": 0
+      }
+    }
+  }
+}

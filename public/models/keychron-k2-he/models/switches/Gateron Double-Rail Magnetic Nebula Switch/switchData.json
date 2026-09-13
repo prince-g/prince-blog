@@ -1,0 +1,41 @@
+{
+  "instanceComponents": ["upperhousing", "housingbase", "stem"],
+  "componentData": {
+    "stem": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": 1.5, "z": 0 }
+      },
+      "infoUITitle": "Stem"
+    },
+    "stem_magnet": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": -0.8, "z": 0 }
+      },
+      "infoUITitle": "Magnet"
+    },
+    "upperhousing": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": 0.5, "z": 0 }
+      },
+      "infoUITitle": "Upper Housing"
+    },
+    "spring": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": -1.4, "z": 0 }
+      },
+      "infoUITitle": "Spring"
+    },
+    "housingbase": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": -2.2, "z": 0 }
+      },
+      "infoUITitle": "Housing Base"
+    },
+    "pressEffect": {
+      "unfoldPosition": {
+        "target": { "x": 0, "y": -0.5, "z": 0 }
+      },
+      "infoUITitle": "Press Effect"
+    }
+  }
+}
