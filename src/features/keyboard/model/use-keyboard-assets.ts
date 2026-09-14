@@ -36,13 +36,22 @@ export async function loadKeyboardDefinition(
   }
 }
 
-function getKeyboardDefinition(relativeName: string): Promise<KeyboardDefinition> {
+export function getKeyboardDefinition(
+  relativeName: string,
+  fetcher: DefinitionFetcher = fetch,
+): Promise<KeyboardDefinition> {
   const pending = definitionRequests.get(relativeName);
   if (pending) return pending;
 
-  const request = loadKeyboardDefinition(relativeName);
+  const request = loadKeyboardDefinition(relativeName, fetcher);
   definitionRequests.set(relativeName, request);
   return request;
+}
+
+export function resetKeyboardAssetCaches(): void {
+  definitionRequests.clear();
+  useLoader.clear(GLTFLoader, GLB_URLS);
+  useLoader.clear(TextureLoader, TEXTURE_URLS);
 }
 
 function configureLoader(loader: GLTFLoader): void {

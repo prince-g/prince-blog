@@ -5,7 +5,7 @@ import type { KeyRegistry } from "../interaction/key-registry";
 import { KEYCHRON_ASSET_ROOT } from "../model/asset-paths";
 import { buildAssemblyPlan } from "../model/build-assembly-plan";
 import { useKeyboardAssets } from "../model/use-keyboard-assets";
-import { CameraRig } from "./CameraRig";
+import { CameraRig, type CameraErrorReporter } from "./CameraRig";
 import { KeyboardModel } from "./KeyboardModel";
 
 const ENVIRONMENT_URL = `${KEYCHRON_ASSET_ROOT}/textures/hdr/potsdamer_platz_1k_compressed.jpg`;
@@ -13,7 +13,12 @@ const ENVIRONMENT_URL = `${KEYCHRON_ASSET_ROOT}/textures/hdr/potsdamer_platz_1k_
 type KeyboardSceneProps = Readonly<{
   registry: KeyRegistry;
   onReady: () => void;
+  onRuntimeError: CameraErrorReporter;
 }>;
+
+export function resetKeyboardSceneAssetCache(): void {
+  useLoader.clear(THREE.TextureLoader, ENVIRONMENT_URL);
+}
 
 function ReadySignal({ onReady }: Pick<KeyboardSceneProps, "onReady">) {
   const sent = useRef(false);
@@ -27,7 +32,7 @@ function ReadySignal({ onReady }: Pick<KeyboardSceneProps, "onReady">) {
   return null;
 }
 
-export function KeyboardScene({ registry, onReady }: KeyboardSceneProps) {
+export function KeyboardScene({ registry, onReady, onRuntimeError }: KeyboardSceneProps) {
   const { definition } = useKeyboardAssets();
   const plan = useMemo(() => buildAssemblyPlan(definition), [definition]);
   const environment = useLoader(THREE.TextureLoader, ENVIRONMENT_URL);
@@ -98,7 +103,7 @@ export function KeyboardScene({ registry, onReady }: KeyboardSceneProps) {
         <planeGeometry args={[38, 18]} />
         <shadowMaterial transparent opacity={0.28} />
       </mesh>
-      <CameraRig />
+      <CameraRig onError={onRuntimeError} />
       <ReadySignal onReady={onReady} />
     </>
   );

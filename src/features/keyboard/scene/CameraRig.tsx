@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 
 type CameraTarget = { yaw: number; pitch: number; distance: number };
@@ -9,6 +9,10 @@ export type CameraInputState = {
   target: CameraTarget;
   parallax: CameraParallax;
 };
+
+export type CameraErrorReporter = (cause: unknown) => void;
+
+type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
 const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 18 };
 const YAW_RANGE = [-0.38, 0.38] as const;
@@ -35,9 +39,21 @@ export function createCameraInputState(): CameraInputState {
   };
 }
 
-export function bindCameraInput(element: HTMLCanvasElement, input: CameraInputState): () => void {
+export function bindCameraInput(
+  element: HTMLCanvasElement,
+  input: CameraInputState,
+  onError: CameraErrorReporter = () => {},
+  windowTarget: WindowEventTarget | undefined = typeof window === "undefined" ? undefined : window,
+): () => void {
   let activePointer: { id: number; x: number; y: number } | null = null;
   const wheelOptions = { passive: false } as const;
+  const safely = <EventType extends Event>(handler: (event: EventType) => void) => (event: Event) => {
+    try {
+      handler(event as EventType);
+    } catch (cause) {
+      onError(cause);
+    }
+  };
 
   const pointerdown = (event: PointerEvent) => {
     activePointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
@@ -71,6 +87,12 @@ export function bindCameraInput(element: HTMLCanvasElement, input: CameraInputSt
     input.parallax.yaw = 0;
     input.parallax.pitch = 0;
   };
+  const lostpointercapture = (event: PointerEvent) => {
+    if (activePointer?.id === event.pointerId) activePointer = null;
+  };
+  const blur = () => {
+    activePointer = null;
+  };
   const wheel = (event: WheelEvent) => {
     event.preventDefault();
     input.target.distance = clamp(
@@ -80,58 +102,88 @@ export function bindCameraInput(element: HTMLCanvasElement, input: CameraInputSt
   };
   const dblclick = () => { resetInput(input); };
 
-  element.addEventListener("pointerdown", pointerdown);
-  element.addEventListener("pointermove", pointermove);
-  element.addEventListener("pointerup", endPointer);
-  element.addEventListener("pointercancel", endPointer);
-  element.addEventListener("pointerleave", pointerleave);
-  element.addEventListener("wheel", wheel, wheelOptions);
-  element.addEventListener("dblclick", dblclick);
+  const safePointerdown = safely(pointerdown);
+  const safePointermove = safely(pointermove);
+  const safeEndPointer = safely(endPointer);
+  const safePointerleave = safely(pointerleave);
+  const safeLostPointerCapture = safely(lostpointercapture);
+  const safeBlur = safely(blur);
+  const safeWheel = safely(wheel);
+  const safeDblclick = safely(dblclick);
+
+  element.addEventListener("pointerdown", safePointerdown);
+  element.addEventListener("pointermove", safePointermove);
+  element.addEventListener("pointerup", safeEndPointer);
+  element.addEventListener("pointercancel", safeEndPointer);
+  element.addEventListener("pointerleave", safePointerleave);
+  element.addEventListener("lostpointercapture", safeLostPointerCapture);
+  element.addEventListener("wheel", safeWheel, wheelOptions);
+  element.addEventListener("dblclick", safeDblclick);
+  windowTarget?.addEventListener("blur", safeBlur);
 
   return () => {
     if (activePointer && element.hasPointerCapture(activePointer.id)) {
       element.releasePointerCapture(activePointer.id);
     }
     activePointer = null;
-    element.removeEventListener("pointerdown", pointerdown);
-    element.removeEventListener("pointermove", pointermove);
-    element.removeEventListener("pointerup", endPointer);
-    element.removeEventListener("pointercancel", endPointer);
-    element.removeEventListener("pointerleave", pointerleave);
-    element.removeEventListener("wheel", wheel);
-    element.removeEventListener("dblclick", dblclick);
+    element.removeEventListener("pointerdown", safePointerdown);
+    element.removeEventListener("pointermove", safePointermove);
+    element.removeEventListener("pointerup", safeEndPointer);
+    element.removeEventListener("pointercancel", safeEndPointer);
+    element.removeEventListener("pointerleave", safePointerleave);
+    element.removeEventListener("lostpointercapture", safeLostPointerCapture);
+    element.removeEventListener("wheel", safeWheel);
+    element.removeEventListener("dblclick", safeDblclick);
+    windowTarget?.removeEventListener("blur", safeBlur);
   };
 }
 
-export function CameraRig() {
+export function applyCameraFrame(
+  camera: Pick<THREE.Camera, "position" | "lookAt">,
+  controls: CameraInputState,
+  current: CameraTarget,
+  delta: number,
+  onError: CameraErrorReporter,
+): void {
+  try {
+    const yaw = clamp(controls.target.yaw + controls.parallax.yaw, YAW_RANGE);
+    const pitch = clamp(controls.target.pitch + controls.parallax.pitch, PITCH_RANGE);
+    current.yaw = THREE.MathUtils.damp(current.yaw, yaw, 8, delta);
+    current.pitch = THREE.MathUtils.damp(current.pitch, pitch, 8, delta);
+    current.distance = THREE.MathUtils.damp(current.distance, controls.target.distance, 8, delta);
+
+    const horizontalDistance = current.distance * Math.cos(current.pitch);
+    camera.position.set(
+      horizontalDistance * Math.sin(current.yaw),
+      current.distance * Math.sin(current.pitch),
+      horizontalDistance * Math.cos(current.yaw),
+    );
+    camera.lookAt(0, 0, 0);
+  } catch (cause) {
+    onError(cause);
+  }
+}
+
+type CameraRigProps = Readonly<{ onError: CameraErrorReporter }>;
+
+export function CameraRig({ onError }: CameraRigProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
   const input = useRef<CameraInputState | null>(null);
   const current = useRef<CameraTarget>({ ...DEFAULT_TARGET });
+  const errorReported = useRef(false);
   if (!input.current) input.current = createCameraInputState();
 
-  useEffect(() => bindCameraInput(canvas, input.current!), [canvas]);
+  const reportError = useCallback((cause: unknown) => {
+    if (errorReported.current) return;
+    errorReported.current = true;
+    onError(cause);
+  }, [onError]);
+
+  useEffect(() => bindCameraInput(canvas, input.current!, reportError), [canvas, reportError]);
 
   useFrame((_, delta) => {
-    const controls = input.current!;
-    const yaw = clamp(controls.target.yaw + controls.parallax.yaw, YAW_RANGE);
-    const pitch = clamp(controls.target.pitch + controls.parallax.pitch, PITCH_RANGE);
-    current.current.yaw = THREE.MathUtils.damp(current.current.yaw, yaw, 8, delta);
-    current.current.pitch = THREE.MathUtils.damp(current.current.pitch, pitch, 8, delta);
-    current.current.distance = THREE.MathUtils.damp(
-      current.current.distance,
-      controls.target.distance,
-      8,
-      delta,
-    );
-
-    const horizontalDistance = current.current.distance * Math.cos(current.current.pitch);
-    camera.position.set(
-      horizontalDistance * Math.sin(current.current.yaw),
-      current.current.distance * Math.sin(current.current.pitch),
-      horizontalDistance * Math.cos(current.current.yaw),
-    );
-    camera.lookAt(0, 0, 0);
+    applyCameraFrame(camera, input.current!, current.current, delta, reportError);
   });
 
   return null;

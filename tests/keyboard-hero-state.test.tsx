@@ -2,13 +2,22 @@ import { isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
-import { bindCameraInput, createCameraInputState } from "../src/features/keyboard/scene/CameraRig";
+import {
+  applyCameraFrame,
+  bindCameraInput,
+  createCameraInputState,
+} from "../src/features/keyboard/scene/CameraRig";
+import { KeyboardCanvas } from "../src/features/keyboard/scene/KeyboardCanvas";
 import { KeyboardErrorBoundary } from "../src/features/keyboard/scene/KeyboardErrorBoundary";
 import {
   canUseWebGL,
+  createKeyboardRuntimeErrorReporter,
+  createWebGLCapabilityProbe,
+  initialKeyboardHeroRuntimeState,
   KeyboardHero,
   KeyboardHeroState,
   ReadyKeyboardBinding,
+  updateKeyboardHeroRuntimeState,
 } from "../src/features/keyboard/scene/KeyboardHero";
 import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
 
@@ -27,6 +36,7 @@ afterEach(() => {
 
 class CameraEventTarget {
   private readonly listeners = new Map<string, Set<EventListener>>();
+  private readonly capturedPointers = new Set<number>();
 
   addEventListener(type: string, listener: EventListener) {
     const listeners = this.listeners.get(type) ?? new Set<EventListener>();
@@ -50,9 +60,14 @@ class CameraEventTarget {
     return { left: 0, top: 0, width: 200, height: 100 } as DOMRect;
   }
 
-  setPointerCapture() {}
-  releasePointerCapture() {}
-  hasPointerCapture() { return true; }
+  setPointerCapture(pointerId: number) { this.capturedPointers.add(pointerId); }
+  releasePointerCapture(pointerId: number) { this.capturedPointers.delete(pointerId); }
+  hasPointerCapture(pointerId: number) { return this.capturedPointers.has(pointerId); }
+
+  losePointerCapture(pointerId: number) {
+    if (!this.capturedPointers.delete(pointerId)) return;
+    this.dispatch("lostpointercapture", { pointerId });
+  }
 }
 
 describe("KeyboardHeroState", () => {
@@ -100,6 +115,44 @@ describe("keyboard scene errors", () => {
     (fallback.props as { onRetry: () => void }).onRetry();
     expect(onRetry).toHaveBeenCalledOnce();
   });
+
+  it("moves a ready keyboard to the error state and releases active keys once", () => {
+    const registry = new KeyRegistry();
+    const reset = vi.fn();
+    registry.register("KeyA", { press() {}, release() {}, reset });
+    registry.press("KeyA");
+    let state = updateKeyboardHeroRuntimeState(initialKeyboardHeroRuntimeState, "ready");
+    const report = createKeyboardRuntimeErrorReporter(registry, () => {
+      state = updateKeyboardHeroRuntimeState(state, "error");
+    });
+
+    report(new Error("frame failed"));
+    report(new Error("frame failed again"));
+
+    expect(reset).toHaveBeenCalledOnce();
+    expect(state).toEqual({ status: "error", canvasKey: 0 });
+    expect(renderToStaticMarkup(<KeyboardHeroState state="error" onRetry={() => {}} />)).toContain("键盘模型加载失败");
+    expect(updateKeyboardHeroRuntimeState(state, "retry")).toEqual({ status: "loading", canvasKey: 1 });
+  });
+
+  it("gives each retry attempt a fresh Canvas identity", () => {
+    const registry = new KeyRegistry();
+    const initial = KeyboardCanvas({
+      attempt: 0,
+      registry,
+      onReady() {},
+      onRuntimeError() {},
+    });
+    const retry = KeyboardCanvas({
+      attempt: 1,
+      registry,
+      onReady() {},
+      onRuntimeError() {},
+    });
+
+    expect(initial.key).toBe("0");
+    expect(retry.key).toBe("1");
+  });
 });
 
 describe("keyboard scene capability and camera input", () => {
@@ -108,6 +161,21 @@ describe("keyboard scene capability and camera input", () => {
     expect(canUseWebGL(() => ({ getContext: (name) => name === "webgl" ? {} : null }))).toBe(true);
     expect(canUseWebGL(() => ({ getContext: () => null }))).toBe(false);
     expect(canUseWebGL(() => { throw new Error("canvas unavailable"); })).toBe(false);
+  });
+
+  it("memoizes a WebGL capability probe and releases its temporary context", () => {
+    const loseContext = vi.fn();
+    const createCanvas = vi.fn(() => ({
+      getContext: (name: string) => name === "webgl2"
+        ? { getExtension: () => ({ loseContext }) }
+        : null,
+    }));
+    const probe = createWebGLCapabilityProbe(createCanvas);
+
+    expect(probe()).toBe(true);
+    expect(probe()).toBe(true);
+    expect(createCanvas).toHaveBeenCalledOnce();
+    expect(loseContext).toHaveBeenCalledOnce();
   });
 
   it("does not create the Canvas when WebGL is unavailable", () => {
@@ -156,5 +224,72 @@ describe("keyboard scene capability and camera input", () => {
     for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "pointerleave", "wheel", "dblclick"]) {
       expect(element.count(type)).toBe(0);
     }
+  });
+
+  it("stops dragging after capture loss or a window blur", () => {
+    const element = new CameraEventTarget();
+    const windowTarget = new CameraEventTarget();
+    const input = createCameraInputState();
+    const cleanup = bindCameraInput(
+      element as unknown as HTMLCanvasElement,
+      input,
+      undefined,
+      windowTarget as unknown as Window,
+    );
+
+    element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
+    element.dispatch("pointermove", { clientX: 110, clientY: 50, pointerId: 1 });
+    expect(input.target.yaw).toBeCloseTo(0.04);
+
+    element.losePointerCapture(1);
+    element.dispatch("pointermove", { clientX: 190, clientY: 50, pointerId: 1 });
+    expect(input.target.yaw).toBeCloseTo(0.04);
+
+    element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 2 });
+    element.dispatch("pointermove", { clientX: 90, clientY: 50, pointerId: 2 });
+    expect(input.target.yaw).toBeCloseTo(0.08);
+
+    windowTarget.dispatch("blur", {});
+    element.dispatch("pointermove", { clientX: 10, clientY: 50, pointerId: 2 });
+    expect(input.target.yaw).toBeCloseTo(0.08);
+
+    cleanup();
+    expect(element.count("lostpointercapture")).toBe(0);
+    expect(windowTarget.count("blur")).toBe(0);
+  });
+
+  it("reports native camera event failures instead of leaking them past the Hero", () => {
+    const failure = new Error("bounds unavailable");
+    const element = new CameraEventTarget();
+    element.getBoundingClientRect = () => { throw failure; };
+    const reportError = vi.fn();
+    const cleanup = bindCameraInput(
+      element as unknown as HTMLCanvasElement,
+      createCameraInputState(),
+      reportError,
+      new CameraEventTarget() as unknown as Window,
+    );
+
+    expect(() => element.dispatch("pointermove", { clientX: 100, clientY: 50, pointerId: 1 })).not.toThrow();
+    expect(reportError).toHaveBeenCalledWith(failure);
+    cleanup();
+  });
+
+  it("reports frame-loop camera failures through the same error path", () => {
+    const failure = new Error("camera write failed");
+    const reportError = vi.fn();
+    const camera = {
+      position: { set() { throw failure; } },
+      lookAt() {},
+    };
+
+    expect(() => applyCameraFrame(
+      camera as never,
+      createCameraInputState(),
+      { yaw: 0.08, pitch: 0.62, distance: 18 },
+      1 / 60,
+      reportError,
+    )).not.toThrow();
+    expect(reportError).toHaveBeenCalledWith(failure);
   });
 });

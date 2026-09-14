@@ -3,7 +3,7 @@ import { KeyboardHeroState } from "./KeyboardHero";
 
 type KeyboardErrorBoundaryProps = Readonly<{
   children: ReactNode;
-  onError?: () => void;
+  onError?: (cause: unknown) => void;
   onRetry: () => void;
 }>;
 
@@ -21,7 +21,7 @@ export class KeyboardErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error("Failed to render the Keychron K2 HE scene.", error, info);
-    this.props.onError?.();
+    this.props.onError?.(error);
   }
 
   render(): ReactNode {
