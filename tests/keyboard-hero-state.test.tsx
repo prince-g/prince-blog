@@ -1,4 +1,4 @@
-import { isValidElement } from "react";
+import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
@@ -11,20 +11,27 @@ import { KeyboardCanvas } from "../src/features/keyboard/scene/KeyboardCanvas";
 import { KeyboardErrorBoundary } from "../src/features/keyboard/scene/KeyboardErrorBoundary";
 import {
   canUseWebGL,
-  createKeyboardRuntimeErrorReporter,
+  createKeyboardHeroOrchestration,
   createWebGLCapabilityProbe,
-  initialKeyboardHeroRuntimeState,
   KeyboardHero,
+  KeyboardHeroContent,
   KeyboardHeroState,
   ReadyKeyboardBinding,
-  updateKeyboardHeroRuntimeState,
 } from "../src/features/keyboard/scene/KeyboardHero";
 import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
 
-const assetMocks = vi.hoisted(() => ({ useKeyboardAssets: vi.fn() }));
+const assetMocks = vi.hoisted(() => ({
+  useKeyboardAssets: vi.fn(),
+  resetKeyboardAssetCaches: vi.fn(),
+}));
+const sceneMocks = vi.hoisted(() => ({ resetKeyboardSceneAssetCache: vi.fn() }));
 const physicalKeyboardMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../src/features/keyboard/model/use-keyboard-assets", () => assetMocks);
+vi.mock("../src/features/keyboard/scene/KeyboardScene", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/features/keyboard/scene/KeyboardScene")>(),
+  resetKeyboardSceneAssetCache: sceneMocks.resetKeyboardSceneAssetCache,
+}));
 vi.mock("../src/features/keyboard/interaction/use-physical-keyboard", () => ({
   usePhysicalKeyboard: physicalKeyboardMock,
 }));
@@ -68,6 +75,18 @@ class CameraEventTarget {
     if (!this.capturedPointers.delete(pointerId)) return;
     this.dispatch("lostpointercapture", { pointerId });
   }
+}
+
+function findElement(node: ReactNode, type: unknown): ReactElement | null {
+  if (!isValidElement(node)) return null;
+  if (node.type === type) return node;
+
+  let found: ReactElement | null = null;
+  const children = (node.props as { children?: ReactNode }).children;
+  Children.forEach(children, (child) => {
+    if (!found) found = findElement(child, type);
+  });
+  return found;
 }
 
 describe("KeyboardHeroState", () => {
@@ -116,42 +135,54 @@ describe("keyboard scene errors", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it("moves a ready keyboard to the error state and releases active keys once", () => {
+  it("orchestrates ready, runtime error and retry through the Hero view", () => {
     const registry = new KeyRegistry();
     const reset = vi.fn();
     registry.register("KeyA", { press() {}, release() {}, reset });
     registry.press("KeyA");
-    let state = updateKeyboardHeroRuntimeState(initialKeyboardHeroRuntimeState, "ready");
-    const report = createKeyboardRuntimeErrorReporter(registry, () => {
-      state = updateKeyboardHeroRuntimeState(state, "error");
-    });
+    const orchestration = createKeyboardHeroOrchestration(registry);
 
-    report(new Error("frame failed"));
-    report(new Error("frame failed again"));
+    expect(orchestration.onReady()).toBe(true);
+    const readyView = KeyboardHeroContent({
+      registry,
+      state: orchestration.state,
+      onReady: orchestration.onReady,
+      onRetry: orchestration.onRetry,
+      onRuntimeError: orchestration.onRuntimeError,
+    });
+    const readyBinding = findElement(readyView, ReadyKeyboardBinding);
+    expect(readyBinding).not.toBeNull();
+    expect((readyBinding!.props as { ready: boolean }).ready).toBe(true);
+
+    expect(orchestration.onRuntimeError(new Error("frame failed"))).toBe(true);
+    expect(orchestration.onRuntimeError(new Error("frame failed again"))).toBe(false);
 
     expect(reset).toHaveBeenCalledOnce();
-    expect(state).toEqual({ status: "error", canvasKey: 0 });
-    expect(renderToStaticMarkup(<KeyboardHeroState state="error" onRetry={() => {}} />)).toContain("键盘模型加载失败");
-    expect(updateKeyboardHeroRuntimeState(state, "retry")).toEqual({ status: "loading", canvasKey: 1 });
-  });
-
-  it("gives each retry attempt a fresh Canvas identity", () => {
-    const registry = new KeyRegistry();
-    const initial = KeyboardCanvas({
-      attempt: 0,
+    const errorView = KeyboardHeroContent({
       registry,
-      onReady() {},
-      onRuntimeError() {},
+      state: orchestration.state,
+      onReady: orchestration.onReady,
+      onRetry: orchestration.onRetry,
+      onRuntimeError: orchestration.onRuntimeError,
     });
-    const retry = KeyboardCanvas({
-      attempt: 1,
-      registry,
-      onReady() {},
-      onRuntimeError() {},
-    });
+    expect(renderToStaticMarkup(errorView)).toContain("键盘模型加载失败");
+    expect(findElement(errorView, ReadyKeyboardBinding)).toBeNull();
 
-    expect(initial.key).toBe("0");
-    expect(retry.key).toBe("1");
+    expect(orchestration.onRetry()).toBe(true);
+    expect(assetMocks.resetKeyboardAssetCaches).toHaveBeenCalledOnce();
+    expect(sceneMocks.resetKeyboardSceneAssetCache).toHaveBeenCalledOnce();
+    const retryView = KeyboardHeroContent({
+      registry,
+      state: orchestration.state,
+      onReady: orchestration.onReady,
+      onRetry: orchestration.onRetry,
+      onRuntimeError: orchestration.onRuntimeError,
+    });
+    const retryCanvas = findElement(retryView, KeyboardCanvas);
+
+    expect(retryCanvas).not.toBeNull();
+    expect(retryCanvas!.key).toBe("1");
+    expect((retryCanvas!.props as { attempt: number }).attempt).toBe(1);
   });
 });
 

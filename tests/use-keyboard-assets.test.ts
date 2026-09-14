@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { useLoader } from "@react-three/fiber";
+import { TextureLoader } from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { KEYCHRON_ASSET_ROOT } from "../src/features/keyboard/model/asset-paths";
 import { KeyboardDataError } from "../src/features/keyboard/model/parse-keyboard-data";
 import {
   getKeyboardDefinition,
   loadKeyboardDefinition,
   resetKeyboardAssetCaches,
 } from "../src/features/keyboard/model/use-keyboard-assets";
+import { resetKeyboardSceneAssetCache } from "../src/features/keyboard/scene/KeyboardScene";
 
 const definitionFile = "models/keyboards/K_2_HE/keyboardData.json";
 const validDefinition = {
@@ -56,5 +61,33 @@ describe("keyboard definition loading errors", () => {
 
     await expect(getKeyboardDefinition(definitionFile, fetcher)).resolves.toMatchObject(validDefinition);
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears every R3F loader cache required before a scene retry", () => {
+    const clear = vi.spyOn(useLoader, "clear").mockImplementation(() => {});
+    const glbUrls = [
+      `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/Keyboard.glb`,
+      `${KEYCHRON_ASSET_ROOT}/models/keycaps/KSA/keycaps.glb`,
+      `${KEYCHRON_ASSET_ROOT}/models/switches/Gateron Double-Rail Magnetic Nebula Switch/switch.glb`,
+      `${KEYCHRON_ASSET_ROOT}/models/common/common.glb`,
+    ];
+    const textureUrls = [
+      `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/textures/keycap_font_windows.jpg`,
+      `${KEYCHRON_ASSET_ROOT}/models/keycaps/KSA/keycap-bump-n.jpg`,
+    ];
+
+    try {
+      resetKeyboardAssetCaches();
+      resetKeyboardSceneAssetCache();
+
+      expect(clear).toHaveBeenCalledWith(GLTFLoader, glbUrls);
+      expect(clear).toHaveBeenCalledWith(TextureLoader, textureUrls);
+      expect(clear).toHaveBeenCalledWith(
+        TextureLoader,
+        `${KEYCHRON_ASSET_ROOT}/textures/hdr/potsdamer_platz_1k_compressed.jpg`,
+      );
+    } finally {
+      clear.mockRestore();
+    }
   });
 });

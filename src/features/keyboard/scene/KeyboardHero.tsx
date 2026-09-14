@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer, useState, type ReactNode } from "react";
+import { useCallback, useReducer, useState, type ReactNode } from "react";
 import { KeyRegistry } from "../interaction/key-registry";
 import { usePhysicalKeyboard } from "../interaction/use-physical-keyboard";
 import { KEYCHRON_ASSET_ROOT } from "../model/asset-paths";
@@ -43,17 +43,55 @@ export function updateKeyboardHeroRuntimeState(
   return { status: "loading", canvasKey: state.canvasKey + 1 };
 }
 
-export function createKeyboardRuntimeErrorReporter(
-  registry: KeyRegistry,
-  onError: (cause: unknown) => void,
-): (cause: unknown) => void {
-  let reported = false;
+type KeyboardHeroCacheResetters = Readonly<{
+  resetKeyboardAssets: () => void;
+  resetKeyboardScene: () => void;
+}>;
 
-  return (cause) => {
-    if (reported) return;
-    reported = true;
-    registry.releaseAll();
-    onError(cause);
+const keyboardHeroCacheResetters: KeyboardHeroCacheResetters = {
+  resetKeyboardAssets: resetKeyboardAssetCaches,
+  resetKeyboardScene: resetKeyboardSceneAssetCache,
+};
+
+export type KeyboardHeroOrchestration = Readonly<{
+  state: KeyboardHeroRuntimeState;
+  onReady: () => boolean;
+  onRuntimeError: (cause: unknown) => boolean;
+  onRetry: () => boolean;
+}>;
+
+export function createKeyboardHeroOrchestration(
+  registry: KeyRegistry,
+  cacheResetters: KeyboardHeroCacheResetters = keyboardHeroCacheResetters,
+): KeyboardHeroOrchestration {
+  let state = initialKeyboardHeroRuntimeState;
+  let runtimeErrorReported = false;
+
+  return {
+    get state() {
+      return state;
+    },
+    onReady() {
+      const nextState = updateKeyboardHeroRuntimeState(state, "ready");
+      if (nextState === state) return false;
+      state = nextState;
+      return true;
+    },
+    onRuntimeError() {
+      if (runtimeErrorReported) return false;
+      runtimeErrorReported = true;
+      registry.releaseAll();
+      state = updateKeyboardHeroRuntimeState(state, "error");
+      return true;
+    },
+    onRetry() {
+      cacheResetters.resetKeyboardAssets();
+      cacheResetters.resetKeyboardScene();
+      registry.releaseAll();
+      runtimeErrorReported = false;
+      state = updateKeyboardHeroRuntimeState(state, "retry");
+      return true;
+    },
   };
 }
 
@@ -126,32 +164,25 @@ export function ReadyKeyboardBinding({ ready, registry }: ReadyKeyboardBindingPr
   return ready ? <PhysicalKeyboardBinding registry={registry} /> : null;
 }
 
-export function KeyboardHero() {
-  const [registry] = useState(() => new KeyRegistry());
-  const [state, dispatch] = useReducer(updateKeyboardHeroRuntimeState, initialKeyboardHeroRuntimeState);
-  const [probeWebGL] = useState(() => createWebGLCapabilityProbe());
-  const reportRuntimeError = useMemo(
-    () => createKeyboardRuntimeErrorReporter(registry, () => dispatch("error")),
-    [registry, state.canvasKey],
-  );
+type KeyboardHeroContentProps = Readonly<{
+  state: KeyboardHeroRuntimeState;
+  registry: KeyRegistry;
+  onReady: () => void;
+  onRetry: () => void;
+  onRuntimeError: (cause: unknown) => void;
+}>;
 
-  const handleReady = useCallback(() => {
-    dispatch("ready");
-  }, []);
-
-  const retry = useCallback(() => {
-    resetKeyboardAssetCaches();
-    resetKeyboardSceneAssetCache();
-    registry.releaseAll();
-    dispatch("retry");
-  }, [registry]);
-
-  if (!probeWebGL()) return <KeyboardHeroState state="no-webgl" />;
-
+export function KeyboardHeroContent({
+  state,
+  registry,
+  onReady,
+  onRetry,
+  onRuntimeError,
+}: KeyboardHeroContentProps) {
   if (state.status === "error") {
     return (
       <section aria-label="Keychron K2 HE 交互式三维键盘">
-        <KeyboardHeroState state="error" onRetry={retry} />
+        <KeyboardHeroState state="error" onRetry={onRetry} />
       </section>
     );
   }
@@ -160,19 +191,50 @@ export function KeyboardHero() {
     <section aria-label="Keychron K2 HE 交互式三维键盘">
       <KeyboardErrorBoundary
         key={state.canvasKey}
-        onError={reportRuntimeError}
-        onRetry={retry}
+        onError={onRuntimeError}
+        onRetry={onRetry}
       >
         <KeyboardCanvas
           key={state.canvasKey}
           attempt={state.canvasKey}
           registry={registry}
-          onReady={handleReady}
-          onRuntimeError={reportRuntimeError}
+          onReady={onReady}
+          onRuntimeError={onRuntimeError}
         />
         {state.status === "loading" && <KeyboardHeroState state="loading" />}
         <ReadyKeyboardBinding ready={state.status === "ready"} registry={registry} />
       </KeyboardErrorBoundary>
     </section>
+  );
+}
+
+export function KeyboardHero() {
+  const [registry] = useState(() => new KeyRegistry());
+  const [orchestration] = useState(() => createKeyboardHeroOrchestration(registry));
+  const [, rerender] = useReducer((version: number) => version + 1, 0);
+  const [probeWebGL] = useState(() => createWebGLCapabilityProbe());
+
+  const handleReady = useCallback(() => {
+    if (orchestration.onReady()) rerender();
+  }, [orchestration]);
+
+  const handleRuntimeError = useCallback((cause: unknown) => {
+    if (orchestration.onRuntimeError(cause)) rerender();
+  }, [orchestration]);
+
+  const retry = useCallback(() => {
+    if (orchestration.onRetry()) rerender();
+  }, [orchestration]);
+
+  if (!probeWebGL()) return <KeyboardHeroState state="no-webgl" />;
+
+  return (
+    <KeyboardHeroContent
+      registry={registry}
+      state={orchestration.state}
+      onReady={handleReady}
+      onRetry={retry}
+      onRuntimeError={handleRuntimeError}
+    />
   );
 }
