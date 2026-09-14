@@ -11,14 +11,73 @@ import { KeyboardCanvas } from "../src/features/keyboard/scene/KeyboardCanvas";
 import { KeyboardErrorBoundary } from "../src/features/keyboard/scene/KeyboardErrorBoundary";
 import {
   canUseWebGL,
-  createKeyboardHeroOrchestration,
   createWebGLCapabilityProbe,
   KeyboardHero,
-  KeyboardHeroContent,
   KeyboardHeroState,
   ReadyKeyboardBinding,
 } from "../src/features/keyboard/scene/KeyboardHero";
 import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
+
+type CapturedHeroProps = Readonly<{
+  onReady: () => void;
+  onRetry: () => void;
+  onRuntimeError: (cause: unknown) => void;
+}>;
+
+const rootHarness = vi.hoisted(() => {
+  const slots: unknown[] = [];
+  let cursor = 0;
+  let rerender: (() => void) | undefined;
+  let output: ReactNode = null;
+
+  const useState = <T,>(initial: T | (() => T)) => {
+    const index = cursor++;
+    if (!(index in slots)) slots[index] = typeof initial === "function" ? (initial as () => T)() : initial;
+    return [slots[index] as T, (next: T) => { slots[index] = next; }] as const;
+  };
+
+  const useReducer = <State, Action>(
+    reducer: (state: State, action: Action) => State,
+    initial: State,
+  ) => {
+    const index = cursor++;
+    if (!(index in slots)) slots[index] = initial;
+    return [slots[index] as State, (action: Action) => {
+      slots[index] = reducer(slots[index] as State, action);
+      rerender?.();
+    }] as const;
+  };
+
+  const useCallback = <Callback extends (...args: never[]) => unknown>(callback: Callback) => callback;
+
+  return {
+    useState,
+    useReducer,
+    useCallback,
+    render(root: () => ReactNode) {
+      rerender = () => {
+        cursor = 0;
+        output = root();
+      };
+      rerender();
+      return output;
+    },
+    get output() { return output; },
+    reset() {
+      slots.length = 0;
+      cursor = 0;
+      rerender = undefined;
+      output = null;
+    },
+  };
+});
+
+vi.mock("react", async (importOriginal) => ({
+  ...await importOriginal<typeof import("react")>(),
+  useState: rootHarness.useState,
+  useReducer: rootHarness.useReducer,
+  useCallback: rootHarness.useCallback,
+}));
 
 const assetMocks = vi.hoisted(() => ({
   useKeyboardAssets: vi.fn(),
@@ -26,12 +85,27 @@ const assetMocks = vi.hoisted(() => ({
 }));
 const sceneMocks = vi.hoisted(() => ({ resetKeyboardSceneAssetCache: vi.fn() }));
 const physicalKeyboardMock = vi.hoisted(() => vi.fn());
+const heroContentMocks = vi.hoisted(() => ({
+  props: null as CapturedHeroProps | null,
+  view: null as ReactNode,
+}));
 
 vi.mock("../src/features/keyboard/model/use-keyboard-assets", () => assetMocks);
 vi.mock("../src/features/keyboard/scene/KeyboardScene", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/features/keyboard/scene/KeyboardScene")>(),
   resetKeyboardSceneAssetCache: sceneMocks.resetKeyboardSceneAssetCache,
 }));
+vi.mock("../src/features/keyboard/scene/KeyboardHeroContent", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/features/keyboard/scene/KeyboardHeroContent")>();
+  return {
+    ...actual,
+    KeyboardHeroContent: (props: Parameters<typeof actual.KeyboardHeroContent>[0]) => {
+      heroContentMocks.props = props;
+      heroContentMocks.view = actual.KeyboardHeroContent(props);
+      return heroContentMocks.view;
+    },
+  };
+});
 vi.mock("../src/features/keyboard/interaction/use-physical-keyboard", () => ({
   usePhysicalKeyboard: physicalKeyboardMock,
 }));
@@ -39,6 +113,9 @@ vi.mock("../src/features/keyboard/interaction/use-physical-keyboard", () => ({
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  rootHarness.reset();
+  heroContentMocks.props = null;
+  heroContentMocks.view = null;
 });
 
 class CameraEventTarget {
@@ -135,50 +212,32 @@ describe("keyboard scene errors", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it("orchestrates ready, runtime error and retry through the Hero view", () => {
-    const registry = new KeyRegistry();
-    const reset = vi.fn();
-    registry.register("KeyA", { press() {}, release() {}, reset });
-    registry.press("KeyA");
-    const orchestration = createKeyboardHeroOrchestration(registry);
+  it("drives ready, runtime error and retry through the KeyboardHero root", () => {
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
+    const root = rootHarness.render(() => <KeyboardHero />);
+    renderToStaticMarkup(root);
 
-    expect(orchestration.onReady()).toBe(true);
-    const readyView = KeyboardHeroContent({
-      registry,
-      state: orchestration.state,
-      onReady: orchestration.onReady,
-      onRetry: orchestration.onRetry,
-      onRuntimeError: orchestration.onRuntimeError,
-    });
-    const readyBinding = findElement(readyView, ReadyKeyboardBinding);
+    expect(heroContentMocks.props).not.toBeNull();
+    const initialProps = heroContentMocks.props!;
+    initialProps.onReady!();
+    renderToStaticMarkup(rootHarness.output);
+
+    const readyBinding = findElement(heroContentMocks.view, ReadyKeyboardBinding);
     expect(readyBinding).not.toBeNull();
     expect((readyBinding!.props as { ready: boolean }).ready).toBe(true);
 
-    expect(orchestration.onRuntimeError(new Error("frame failed"))).toBe(true);
-    expect(orchestration.onRuntimeError(new Error("frame failed again"))).toBe(false);
+    heroContentMocks.props!.onRuntimeError!(new Error("frame failed"));
+    renderToStaticMarkup(rootHarness.output);
+    expect(renderToStaticMarkup(heroContentMocks.view)).toContain("键盘模型加载失败");
+    expect(findElement(heroContentMocks.view, ReadyKeyboardBinding)).toBeNull();
 
-    expect(reset).toHaveBeenCalledOnce();
-    const errorView = KeyboardHeroContent({
-      registry,
-      state: orchestration.state,
-      onReady: orchestration.onReady,
-      onRetry: orchestration.onRetry,
-      onRuntimeError: orchestration.onRuntimeError,
-    });
-    expect(renderToStaticMarkup(errorView)).toContain("键盘模型加载失败");
-    expect(findElement(errorView, ReadyKeyboardBinding)).toBeNull();
-
-    expect(orchestration.onRetry()).toBe(true);
+    const errorState = findElement(heroContentMocks.view, KeyboardHeroState);
+    expect(errorState).not.toBeNull();
+    (errorState!.props as { onRetry: () => void }).onRetry();
+    renderToStaticMarkup(rootHarness.output);
     expect(assetMocks.resetKeyboardAssetCaches).toHaveBeenCalledOnce();
     expect(sceneMocks.resetKeyboardSceneAssetCache).toHaveBeenCalledOnce();
-    const retryView = KeyboardHeroContent({
-      registry,
-      state: orchestration.state,
-      onReady: orchestration.onReady,
-      onRetry: orchestration.onRetry,
-      onRuntimeError: orchestration.onRuntimeError,
-    });
-    const retryCanvas = findElement(retryView, KeyboardCanvas);
+    const retryCanvas = findElement(heroContentMocks.view, KeyboardCanvas);
 
     expect(retryCanvas).not.toBeNull();
     expect(retryCanvas!.key).toBe("1");
