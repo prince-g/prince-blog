@@ -5,6 +5,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { KEYCHRON_ASSET_ROOT } from "./asset-paths";
 import { parseKeyboardData } from "./parse-keyboard-data";
+import type { KeyboardDefinition } from "./keyboard-types";
 
 const KEYBOARD_DEFINITION = "models/keyboards/K_2_HE/keyboardData.json";
 const GLB_URLS = [
@@ -18,19 +19,29 @@ const TEXTURE_URLS = [
   `${KEYCHRON_ASSET_ROOT}/models/keycaps/KSA/keycap-bump-n.jpg`,
 ];
 
-const jsonRequests = new Map<string, Promise<unknown>>();
+type DefinitionFetcher = (url: string) => Promise<Response>;
 
-function fetchJson(relativeName: string): Promise<unknown> {
-  const pending = jsonRequests.get(relativeName);
+const definitionRequests = new Map<string, Promise<KeyboardDefinition>>();
+
+export async function loadKeyboardDefinition(
+  relativeName: string,
+  fetcher: DefinitionFetcher = fetch,
+): Promise<KeyboardDefinition> {
+  try {
+    const response = await fetcher(`${KEYCHRON_ASSET_ROOT}/${relativeName}`);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    return parseKeyboardData(await response.json());
+  } catch (cause) {
+    throw new Error(`Failed to load ${relativeName}`, { cause });
+  }
+}
+
+function getKeyboardDefinition(relativeName: string): Promise<KeyboardDefinition> {
+  const pending = definitionRequests.get(relativeName);
   if (pending) return pending;
 
-  const request = fetch(`${KEYCHRON_ASSET_ROOT}/${relativeName}`).then(async (response) => {
-    if (!response.ok) {
-      throw new Error(`Failed to load ${relativeName}: ${response.status} ${response.statusText}`);
-    }
-    return response.json() as Promise<unknown>;
-  });
-  jsonRequests.set(relativeName, request);
+  const request = loadKeyboardDefinition(relativeName);
+  definitionRequests.set(relativeName, request);
   return request;
 }
 
@@ -44,7 +55,7 @@ function configureLoader(loader: GLTFLoader): void {
 export function useKeyboardAssets() {
   const [keyboard, keycaps, switches, common] = useLoader(GLTFLoader, GLB_URLS, configureLoader);
   const [legendAtlas, bumpMap] = useLoader(TextureLoader, TEXTURE_URLS);
-  const definition = parseKeyboardData(use(fetchJson(KEYBOARD_DEFINITION)));
+  const definition = use(getKeyboardDefinition(KEYBOARD_DEFINITION));
 
   legendAtlas.colorSpace = SRGBColorSpace;
   legendAtlas.flipY = false;
