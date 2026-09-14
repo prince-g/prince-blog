@@ -14,6 +14,12 @@ describe("key animation", () => {
     expect(pressed.glow).toBeGreaterThan(0);
     expect(neighbor.offsetY).toBe(0);
     expect(neighbor.glow).toBe(0);
+
+    for (let frame = 0; frame < 120; frame += 1) {
+      stepKeyAnimation(pressed, 1 / 60);
+    }
+    expect(pressed.offsetY).toBeCloseTo(-0.16, 8);
+    expect(pressed.glow).toBeCloseTo(1, 8);
   });
 
   it("is independent of the number of frames used for the same elapsed time", () => {
