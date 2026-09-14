@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { KeyboardHeroState } from "./KeyboardHero";
+import { KeyboardHeroState } from "./KeyboardHeroState";
 
 type KeyboardErrorBoundaryProps = Readonly<{
   children: ReactNode;

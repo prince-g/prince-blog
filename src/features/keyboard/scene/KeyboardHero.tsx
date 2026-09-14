@@ -1,10 +1,12 @@
 import { useCallback, useReducer, useState } from "react";
 import { KeyRegistry } from "../interaction/key-registry";
 import { resetKeyboardAssetCaches } from "../model/use-keyboard-assets";
-import { KeyboardHeroContent, KeyboardHeroState } from "./KeyboardHeroContent";
+import { KeyboardHeroContent } from "./KeyboardHeroContent";
+import { KeyboardHeroState } from "./KeyboardHeroState";
 import { resetKeyboardSceneAssetCache } from "./KeyboardScene";
 
-export { KeyboardHeroContent, KeyboardHeroState, ReadyKeyboardBinding } from "./KeyboardHeroContent";
+export { KeyboardHeroContent, ReadyKeyboardBinding } from "./KeyboardHeroContent";
+export { KeyboardHeroState } from "./KeyboardHeroState";
 
 type WebGLCanvas = Readonly<{ getContext(contextId: string): unknown }>;
 type WebGLContext = Readonly<{
