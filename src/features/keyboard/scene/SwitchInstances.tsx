@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import * as THREE from "three";
 import type { AssemblyPlan, KeyboardDefinition } from "../model/keyboard-types";
 
@@ -24,6 +24,15 @@ function switchMesh(scene: THREE.Group, name: string): THREE.Mesh {
   return node;
 }
 
+function hasMorphTargets(mesh: THREE.Mesh): boolean {
+  const { morphAttributes } = mesh.geometry;
+  return Boolean(
+    morphAttributes.position?.length
+    || morphAttributes.normal?.length
+    || morphAttributes.color?.length,
+  );
+}
+
 export function SwitchInstances({ keyboardOffset, orientation, plan, switchScene }: SwitchInstancesProps) {
   const instances = useMemo(() => {
     switchScene.updateMatrixWorld(true);
@@ -32,6 +41,9 @@ export function SwitchInstances({ keyboardOffset, orientation, plan, switchScene
 
     return SWITCH_PARTS.map((name) => {
       const source = switchMesh(switchScene, name);
+      if (source.morphTargetInfluences === undefined && hasMorphTargets(source)) {
+        source.updateMorphTargets();
+      }
       const instance = new THREE.InstancedMesh(source.geometry, source.material, plan.keys.length);
       const matrix = new THREE.Matrix4();
 
@@ -42,14 +54,14 @@ export function SwitchInstances({ keyboardOffset, orientation, plan, switchScene
           .multiply(orientationMatrix)
           .multiply(source.matrixWorld);
         instance.setMatrixAt(index, matrix);
+        if (source.morphTargetInfluences) instance.setMorphAt(index, source);
       });
       instance.instanceMatrix.needsUpdate = true;
+      if (instance.morphTexture) instance.morphTexture.needsUpdate = true;
       instance.name = `${name}Instances`;
       return instance;
     });
   }, [keyboardOffset, orientation, plan.keys, switchScene]);
-
-  useEffect(() => () => instances.forEach((instance) => instance.dispose()), [instances]);
 
   return instances.map((instance) => <primitive key={instance.name} object={instance} />);
 }
