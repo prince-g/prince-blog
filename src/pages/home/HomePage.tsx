@@ -36,10 +36,10 @@ export function HomePage() {
   }, { scope: root });
 
   return (
-    <main className="home-shell" ref={root}>
+    <main className="home-shell" id="main-content" ref={root} tabIndex={-1}>
       <a className="skip-link" href="#main-content">跳至主要内容</a>
       <SiteHeader />
-      <h1 className="home-title" data-home-title id="main-content" tabIndex={-1}>Ideas become interfaces.</h1>
+      <h1 className="home-title" data-home-title>Ideas become interfaces.</h1>
       <div className="home-keyboard">
         <KeyboardHero />
       </div>
@@ -50,10 +50,10 @@ export function HomePage() {
 
 export function PlaceholderPage({ title }: PlaceholderPageProps) {
   return (
-    <main className="placeholder-shell">
+    <main className="placeholder-shell" id="main-content" tabIndex={-1}>
       <a className="skip-link" href="#main-content">跳至主要内容</a>
       <SiteHeader />
-      <section className="placeholder-content" id="main-content" tabIndex={-1}>
+      <section className="placeholder-content">
         <h1>{title}</h1>
         <p>内容正在整理</p>
         <a className="return-home" href="/">返回首页</a>
