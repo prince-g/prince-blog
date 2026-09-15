@@ -1,0 +1,41 @@
+@import "./tailwind.css";
+
+:root {
+  color-scheme: dark;
+  --ink: #080908;
+  --surface: #111512;
+  --text: #f2f2ed;
+  --muted: #90978e;
+  --accent: #caff6a;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+  color: var(--text);
+  background: var(--ink);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--ink);
+  background: var(--accent);
+}
