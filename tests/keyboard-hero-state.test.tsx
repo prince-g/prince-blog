@@ -362,6 +362,24 @@ describe("keyboard scene capability and camera input", () => {
     expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
   });
 
+  it("does not clamp yaw when framing, so a full revolution renders", () => {
+    const camera = {
+      position: { set: vi.fn() },
+      lookAt: vi.fn(),
+    };
+    const input = createCameraInputState();
+    input.target.yaw = 3.5; // > π: only reachable when applyCameraFrame leaves yaw unclamped
+    applyCameraFrame(camera as never, input, { ...input.target }, 1 / 60, vi.fn());
+
+    const horizontalDistance = input.target.distance * Math.cos(input.target.pitch);
+    expect(camera.position.set).toHaveBeenCalledWith(
+      horizontalDistance * Math.sin(3.5),
+      expect.any(Number),
+      horizontalDistance * Math.cos(3.5),
+    );
+    expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
+  });
+
   it("stops dragging after capture loss or a window blur", () => {
     const element = new CameraEventTarget();
     const windowTarget = new CameraEventTarget();
