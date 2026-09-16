@@ -14,13 +14,20 @@ export type CameraErrorReporter = (cause: unknown) => void;
 
 type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
-const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 18 };
+const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 49 };
 const YAW_RANGE = [-0.38, 0.38] as const;
 const PITCH_RANGE = [0.34, 0.92] as const;
-const DISTANCE_RANGE = [14, 23] as const;
+const DISTANCE_RANGE = [38, 62] as const;
+const CAMERA_FOCUS_Y = 5;
 const PARALLAX_LIMIT = 0.025;
 const DRAG_RADIANS_PER_PIXEL = 0.004;
 const WHEEL_DISTANCE_PER_PIXEL = 0.008;
+
+export const INITIAL_CAMERA_POSITION = [
+  DEFAULT_TARGET.distance * Math.cos(DEFAULT_TARGET.pitch) * Math.sin(DEFAULT_TARGET.yaw),
+  CAMERA_FOCUS_Y + DEFAULT_TARGET.distance * Math.sin(DEFAULT_TARGET.pitch),
+  DEFAULT_TARGET.distance * Math.cos(DEFAULT_TARGET.pitch) * Math.cos(DEFAULT_TARGET.yaw),
+] as const;
 
 function clamp(value: number, [minimum, maximum]: readonly [number, number]): number {
   return Math.min(maximum, Math.max(minimum, value));
@@ -155,10 +162,10 @@ export function applyCameraFrame(
     const horizontalDistance = current.distance * Math.cos(current.pitch);
     camera.position.set(
       horizontalDistance * Math.sin(current.yaw),
-      current.distance * Math.sin(current.pitch),
+      CAMERA_FOCUS_Y + current.distance * Math.sin(current.pitch),
       horizontalDistance * Math.cos(current.yaw),
     );
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, CAMERA_FOCUS_Y, 0);
   } catch (cause) {
     onError(cause);
   }

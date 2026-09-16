@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import type { KeyRegistry } from "../interaction/key-registry";
-import type { CameraErrorReporter } from "./CameraRig";
+import { INITIAL_CAMERA_POSITION, type CameraErrorReporter } from "./CameraRig";
 import { KeyboardScene } from "./KeyboardScene";
 
 type KeyboardCanvasProps = Readonly<{
@@ -16,7 +16,7 @@ export function KeyboardCanvas({ attempt, registry, onReady, onRuntimeError }: K
     <Canvas
       key={attempt}
       dpr={[1, 1.75]}
-      camera={{ fov: 32, near: 0.1, far: 120, position: [0, 10.5, 18] }}
+      camera={{ fov: 32, near: 0.1, far: 120, position: [...INITIAL_CAMERA_POSITION] }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       shadows
     >

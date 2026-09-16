@@ -299,21 +299,38 @@ describe("keyboard scene capability and camera input", () => {
 
     const wheel = { deltaY: 100, preventDefault: vi.fn() };
     element.dispatch("wheel", wheel);
-    expect(input.target.distance).toBeCloseTo(18.8);
+    expect(input.target.distance).toBeCloseTo(49.8);
     expect(wheel.preventDefault).toHaveBeenCalledOnce();
 
     element.dispatch("pointermove", { clientX: 10000, clientY: 10000, pointerId: 1 });
     element.dispatch("wheel", { deltaY: 10000, preventDefault() {} });
-    expect(input.target).toEqual({ yaw: -0.38, pitch: 0.92, distance: 23 });
+    expect(input.target).toEqual({ yaw: -0.38, pitch: 0.92, distance: 62 });
 
     element.dispatch("dblclick", {});
-    expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, distance: 18 });
+    expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, distance: 49 });
     expect(input.parallax).toEqual({ yaw: 0, pitch: 0 });
 
     cleanup();
     for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "pointerleave", "wheel", "dblclick"]) {
       expect(element.count(type)).toBe(0);
     }
+  });
+
+  it("frames the desktop keyboard below the title's visual lane", () => {
+    const camera = {
+      position: { set: vi.fn() },
+      lookAt: vi.fn(),
+    };
+    const input = createCameraInputState();
+
+    applyCameraFrame(camera as never, input, { ...input.target }, 1 / 60, vi.fn());
+
+    expect(camera.position.set).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.closeTo(33.47, 2),
+      expect.any(Number),
+    );
+    expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
   });
 
   it("stops dragging after capture loss or a window blur", () => {

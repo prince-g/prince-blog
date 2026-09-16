@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import type { AssemblyPlan, KeyboardDefinition } from "../model/keyboard-types";
 
@@ -34,34 +34,63 @@ function hasMorphTargets(mesh: THREE.Mesh): boolean {
 }
 
 export function SwitchInstances({ keyboardOffset, orientation, plan, switchScene }: SwitchInstancesProps) {
-  const instances = useMemo(() => {
+  return SWITCH_PARTS.map((name) => (
+    <SwitchPartInstances
+      key={name}
+      keyboardOffset={keyboardOffset}
+      name={name}
+      orientation={orientation}
+      plan={plan}
+      source={switchMesh(switchScene, name)}
+      switchScene={switchScene}
+    />
+  ));
+}
+
+type SwitchPartInstancesProps = SwitchInstancesProps & Readonly<{
+  name: (typeof SWITCH_PARTS)[number];
+  source: THREE.Mesh;
+}>;
+
+function SwitchPartInstances({
+  keyboardOffset,
+  name,
+  orientation,
+  plan,
+  source,
+  switchScene,
+}: SwitchPartInstancesProps) {
+  const instance = useRef<THREE.InstancedMesh>(null);
+
+  useLayoutEffect(() => {
     switchScene.updateMatrixWorld(true);
     const offsetMatrix = new THREE.Matrix4().makeTranslation(...keyboardOffset);
     const orientationMatrix = new THREE.Matrix4().makeRotationY(orientation === "south" ? Math.PI : 0);
+    if (source.morphTargetInfluences === undefined && hasMorphTargets(source)) {
+      source.updateMorphTargets();
+    }
+    const mesh = instance.current;
+    if (!mesh) return;
+    const matrix = new THREE.Matrix4();
 
-    return SWITCH_PARTS.map((name) => {
-      const source = switchMesh(switchScene, name);
-      if (source.morphTargetInfluences === undefined && hasMorphTargets(source)) {
-        source.updateMorphTargets();
-      }
-      const instance = new THREE.InstancedMesh(source.geometry, source.material, plan.keys.length);
-      const matrix = new THREE.Matrix4();
-
-      plan.keys.forEach((key, index) => {
-        matrix
-          .copy(offsetMatrix)
-          .multiply(new THREE.Matrix4().makeTranslation(key.position.x, key.position.y, key.position.z))
-          .multiply(orientationMatrix)
-          .multiply(source.matrixWorld);
-        instance.setMatrixAt(index, matrix);
-        if (source.morphTargetInfluences) instance.setMorphAt(index, source);
-      });
-      instance.instanceMatrix.needsUpdate = true;
-      if (instance.morphTexture) instance.morphTexture.needsUpdate = true;
-      instance.name = `${name}Instances`;
-      return instance;
+    plan.keys.forEach((key, index) => {
+      matrix
+        .copy(offsetMatrix)
+        .multiply(new THREE.Matrix4().makeTranslation(key.position.x, key.position.y, key.position.z))
+        .multiply(orientationMatrix)
+        .multiply(source.matrixWorld);
+      mesh.setMatrixAt(index, matrix);
+      if (source.morphTargetInfluences) mesh.setMorphAt(index, source);
     });
-  }, [keyboardOffset, orientation, plan.keys, switchScene]);
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.morphTexture) mesh.morphTexture.needsUpdate = true;
+  }, [keyboardOffset, orientation, plan.keys, source, switchScene]);
 
-  return instances.map((instance) => <primitive key={instance.name} object={instance} />);
+  return (
+    <instancedMesh
+      ref={instance}
+      args={[source.geometry, source.material, plan.keys.length]}
+      name={`${name}Instances`}
+    />
+  );
 }
