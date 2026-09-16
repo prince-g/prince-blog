@@ -15,8 +15,7 @@ export type CameraErrorReporter = (cause: unknown) => void;
 type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
 const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 49 };
-const YAW_RANGE = [-0.38, 0.38] as const;
-const PITCH_RANGE = [0.34, 0.92] as const;
+const PITCH_RANGE = [0.05, 1.45] as const;
 const DISTANCE_RANGE = [38, 62] as const;
 const CAMERA_FOCUS_Y = 5;
 const PARALLAX_LIMIT = 0.025;
@@ -74,10 +73,7 @@ export function bindCameraInput(
     input.parallax.pitch = clamp(normalizedY, [-1, 1]) * PARALLAX_LIMIT;
 
     if (!activePointer || activePointer.id !== event.pointerId) return;
-    input.target.yaw = clamp(
-      input.target.yaw - (event.clientX - activePointer.x) * DRAG_RADIANS_PER_PIXEL,
-      YAW_RANGE,
-    );
+    input.target.yaw = input.target.yaw - (event.clientX - activePointer.x) * DRAG_RADIANS_PER_PIXEL;
     input.target.pitch = clamp(
       input.target.pitch + (event.clientY - activePointer.y) * DRAG_RADIANS_PER_PIXEL,
       PITCH_RANGE,
@@ -153,7 +149,7 @@ export function applyCameraFrame(
   onError: CameraErrorReporter,
 ): void {
   try {
-    const yaw = clamp(controls.target.yaw + controls.parallax.yaw, YAW_RANGE);
+    const yaw = controls.target.yaw + controls.parallax.yaw;
     const pitch = clamp(controls.target.pitch + controls.parallax.pitch, PITCH_RANGE);
     current.yaw = THREE.MathUtils.damp(current.yaw, yaw, 8, delta);
     current.pitch = THREE.MathUtils.damp(current.pitch, pitch, 8, delta);

@@ -284,7 +284,7 @@ describe("keyboard scene capability and camera input", () => {
     expect(physicalKeyboardMock).toHaveBeenCalledWith(registry);
   });
 
-  it("constrains camera input, restores defaults and removes every listener", () => {
+  it("frees yaw and clamps pitch and distance, restores defaults and removes every listener", () => {
     const element = new CameraEventTarget();
     const input = createCameraInputState();
     const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
@@ -304,7 +304,9 @@ describe("keyboard scene capability and camera input", () => {
 
     element.dispatch("pointermove", { clientX: 10000, clientY: 10000, pointerId: 1 });
     element.dispatch("wheel", { deltaY: 10000, preventDefault() {} });
-    expect(input.target).toEqual({ yaw: -0.38, pitch: 0.92, distance: 62 });
+    expect(input.target.yaw).toBeLessThan(-0.38);
+    expect(input.target.pitch).toBe(1.45);
+    expect(input.target.distance).toBe(62);
 
     element.dispatch("dblclick", {});
     expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, distance: 49 });
@@ -314,6 +316,33 @@ describe("keyboard scene capability and camera input", () => {
     for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "pointerleave", "wheel", "dblclick"]) {
       expect(element.count(type)).toBe(0);
     }
+  });
+
+  it("accumulates yaw past a full revolution when dragged horizontally", () => {
+    const element = new CameraEventTarget();
+    const input = createCameraInputState();
+    const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
+
+    element.dispatch("pointerdown", { clientX: 0, clientY: 50, pointerId: 1 });
+    element.dispatch("pointermove", { clientX: 2000, clientY: 50, pointerId: 1 });
+
+    expect(input.target.yaw).toBeCloseTo(0.08 - 2000 * 0.004, 10);
+    expect(Math.abs(input.target.yaw - 0.08)).toBeGreaterThan(2 * Math.PI);
+
+    cleanup();
+  });
+
+  it("clamps pitch at the widened lower bound", () => {
+    const element = new CameraEventTarget();
+    const input = createCameraInputState();
+    const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
+
+    element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
+    element.dispatch("pointermove", { clientX: 100, clientY: -10000, pointerId: 1 });
+
+    expect(input.target.pitch).toBe(0.05);
+
+    cleanup();
   });
 
   it("frames the desktop keyboard below the title's visual lane", () => {
