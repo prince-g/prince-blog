@@ -305,7 +305,7 @@ describe("keyboard scene capability and camera input", () => {
     element.dispatch("pointermove", { clientX: 10000, clientY: 10000, pointerId: 1 });
     element.dispatch("wheel", { deltaY: 10000, preventDefault() {} });
     expect(input.target.yaw).toBeLessThan(-0.38);
-    expect(input.target.pitch).toBe(1.45);
+    expect(input.target.pitch).toBe(Math.PI / 2);
     expect(input.target.distance).toBe(62);
 
     element.dispatch("dblclick", {});
@@ -332,7 +332,7 @@ describe("keyboard scene capability and camera input", () => {
     cleanup();
   });
 
-  it("clamps pitch at the widened lower bound", () => {
+  it("clamps pitch at the full lower bound (looking up from below)", () => {
     const element = new CameraEventTarget();
     const input = createCameraInputState();
     const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
@@ -340,7 +340,7 @@ describe("keyboard scene capability and camera input", () => {
     element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
     element.dispatch("pointermove", { clientX: 100, clientY: -10000, pointerId: 1 });
 
-    expect(input.target.pitch).toBe(0.05);
+    expect(input.target.pitch).toBe(-Math.PI / 2);
 
     cleanup();
   });

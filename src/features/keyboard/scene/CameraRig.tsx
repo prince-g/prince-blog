@@ -15,7 +15,7 @@ export type CameraErrorReporter = (cause: unknown) => void;
 type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
 const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 49 };
-const PITCH_RANGE = [0.05, 1.45] as const;
+const PITCH_RANGE = [-Math.PI / 2, Math.PI / 2] as const;
 const DISTANCE_RANGE = [38, 62] as const;
 const CAMERA_FOCUS_Y = 5;
 const PARALLAX_LIMIT = 0.025;
