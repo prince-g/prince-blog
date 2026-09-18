@@ -7,11 +7,12 @@ import { KeyboardScene } from "./KeyboardScene";
 type KeyboardCanvasProps = Readonly<{
   attempt: number;
   registry: KeyRegistry;
+  resetRequest?: number;
   onReady: () => void;
   onRuntimeError: CameraErrorReporter;
 }>;
 
-export function KeyboardCanvas({ attempt, registry, onReady, onRuntimeError }: KeyboardCanvasProps) {
+export function KeyboardCanvas({ attempt, registry, resetRequest, onReady, onRuntimeError }: KeyboardCanvasProps) {
   return (
     <Canvas
       key={attempt}
@@ -21,7 +22,12 @@ export function KeyboardCanvas({ attempt, registry, onReady, onRuntimeError }: K
       shadows
     >
       <Suspense fallback={null}>
-        <KeyboardScene registry={registry} onReady={onReady} onRuntimeError={onRuntimeError} />
+        <KeyboardScene
+          registry={registry}
+          resetRequest={resetRequest}
+          onReady={onReady}
+          onRuntimeError={onRuntimeError}
+        />
       </Suspense>
     </Canvas>
   );

@@ -12,6 +12,7 @@ const ENVIRONMENT_URL = `${KEYCHRON_ASSET_ROOT}/textures/hdr/potsdamer_platz_1k_
 
 type KeyboardSceneProps = Readonly<{
   registry: KeyRegistry;
+  resetRequest?: number;
   onReady: () => void;
   onRuntimeError: CameraErrorReporter;
 }>;
@@ -32,7 +33,7 @@ function ReadySignal({ onReady }: Pick<KeyboardSceneProps, "onReady">) {
   return null;
 }
 
-export function KeyboardScene({ registry, onReady, onRuntimeError }: KeyboardSceneProps) {
+export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError }: KeyboardSceneProps) {
   const { definition } = useKeyboardAssets();
   const plan = useMemo(() => buildAssemblyPlan(definition), [definition]);
   const environment = useLoader(THREE.TextureLoader, ENVIRONMENT_URL);
@@ -103,7 +104,7 @@ export function KeyboardScene({ registry, onReady, onRuntimeError }: KeyboardSce
         <planeGeometry args={[38, 18]} />
         <shadowMaterial transparent opacity={0.28} />
       </mesh>
-      <CameraRig onError={onRuntimeError} />
+      <CameraRig onError={onRuntimeError} resetRequest={resetRequest} />
       <ReadySignal onReady={onReady} />
     </>
   );

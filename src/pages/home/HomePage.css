@@ -86,15 +86,44 @@
 }
 
 .home-title {
-  top: clamp(9.5rem, 19vh, 11.75rem);
+  top: clamp(5.75rem, 10vh, 7.5rem);
   left: clamp(1rem, 8.3vw, 7.5rem);
-  max-width: min(42rem, 54vw);
+  max-width: 15rem;
   color: var(--text);
-  font-size: clamp(3.1rem, 6.8vw, 6rem);
+  font-size: 2.25rem;
   font-weight: 600;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  line-height: 1;
+  letter-spacing: 0;
   text-wrap: balance;
+}
+
+.keyboard-text-input {
+  position: absolute;
+  z-index: 4;
+  top: clamp(8rem, 15vh, 10.5rem);
+  left: 50%;
+  width: min(24.5rem, calc(100% - 2rem));
+  min-height: 8.5rem;
+  padding: 1rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 92%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.45;
+  letter-spacing: 0;
+  resize: none;
+  transform: translateX(-50%);
+}
+
+.keyboard-text-input::placeholder {
+  color: var(--muted);
+}
+
+.keyboard-text-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .home-keyboard {
@@ -119,6 +148,30 @@
   right: clamp(1rem, 3.3vw, 3rem);
   bottom: clamp(1.5rem, 4.5vh, 2.75rem);
   color: var(--accent);
+}
+
+.keyboard-reset {
+  position: absolute;
+  z-index: 4;
+  bottom: clamp(1.5rem, 4.5vh, 2.75rem);
+  left: clamp(1rem, 3.3vw, 3rem);
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 88%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+  place-items: center;
+}
+
+.keyboard-reset:hover {
+  color: var(--ink);
+  background: var(--accent);
 }
 
 .skip-link {
@@ -186,7 +239,13 @@
   }
 
   .home-title {
-    top: 8.5rem;
-    max-width: calc(100vw - 2rem);
+    top: 5.25rem;
+    max-width: 10rem;
+    font-size: 1.5rem;
+  }
+
+  .keyboard-text-input {
+    top: 9.25rem;
+    min-height: 6.5rem;
   }
 }

@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { type KeyRegistry } from "./key-registry";
-import { createPhysicalKeyboardHandlers } from "./physical-keyboard";
+import { createPhysicalKeyboardHandlers, type KeyboardTextInputHandler } from "./physical-keyboard";
 
-export function usePhysicalKeyboard(registry: KeyRegistry) {
+export function usePhysicalKeyboard(registry: KeyRegistry, onTextInput?: KeyboardTextInputHandler) {
   useEffect(() => {
-    const handlers = createPhysicalKeyboardHandlers(registry);
+    const handlers = createPhysicalKeyboardHandlers(registry, onTextInput);
     const visibilitychange = () => handlers.visibilitychange(document);
 
     window.addEventListener("keydown", handlers.keydown);
@@ -19,5 +19,5 @@ export function usePhysicalKeyboard(registry: KeyRegistry) {
       document.removeEventListener("visibilitychange", visibilitychange);
       registry.releaseAll();
     };
-  }, [registry]);
+  }, [onTextInput, registry]);
 }

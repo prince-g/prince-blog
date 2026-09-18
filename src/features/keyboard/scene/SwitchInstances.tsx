@@ -12,6 +12,7 @@ const SWITCH_PARTS = [
 ] as const;
 
 type SwitchInstancesProps = Readonly<{
+  assemblyHeight?: number;
   keyboardOffset: KeyboardDefinition["keyboardOffset"];
   orientation: KeyboardDefinition["switchOrientation"];
   plan: AssemblyPlan;
@@ -33,10 +34,17 @@ function hasMorphTargets(mesh: THREE.Mesh): boolean {
   );
 }
 
-export function SwitchInstances({ keyboardOffset, orientation, plan, switchScene }: SwitchInstancesProps) {
+export function SwitchInstances({
+  assemblyHeight = 0,
+  keyboardOffset,
+  orientation,
+  plan,
+  switchScene,
+}: SwitchInstancesProps) {
   return SWITCH_PARTS.map((name) => (
     <SwitchPartInstances
       key={name}
+      assemblyHeight={assemblyHeight}
       keyboardOffset={keyboardOffset}
       name={name}
       orientation={orientation}
@@ -53,6 +61,7 @@ type SwitchPartInstancesProps = SwitchInstancesProps & Readonly<{
 }>;
 
 function SwitchPartInstances({
+  assemblyHeight = 0,
   keyboardOffset,
   name,
   orientation,
@@ -76,7 +85,11 @@ function SwitchPartInstances({
     plan.keys.forEach((key, index) => {
       matrix
         .copy(offsetMatrix)
-        .multiply(new THREE.Matrix4().makeTranslation(key.position.x, key.position.y, key.position.z))
+        .multiply(new THREE.Matrix4().makeTranslation(
+          key.position.x,
+          key.position.y + assemblyHeight,
+          key.position.z,
+        ))
         .multiply(orientationMatrix)
         .multiply(source.matrixWorld);
       mesh.setMatrixAt(index, matrix);
@@ -84,7 +97,7 @@ function SwitchPartInstances({
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.morphTexture) mesh.morphTexture.needsUpdate = true;
-  }, [keyboardOffset, orientation, plan.keys, source, switchScene]);
+  }, [assemblyHeight, keyboardOffset, orientation, plan.keys, source, switchScene]);
 
   return (
     <instancedMesh

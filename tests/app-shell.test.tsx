@@ -65,11 +65,13 @@ describe("app shell", () => {
     expectSiteHeader(renderRoute("/"));
   });
 
-  it("keeps the home heading, keyboard hero and key prompt as ordered main content", () => {
+  it("keeps the home heading, keyboard hero, text input and view reset as ordered main content", () => {
     const markup = renderRoute("/");
     const main = elementContent(markup, "main", { id: "main-content" });
 
     expectTextElement(main, "h1", "Ideas become interfaces.");
+    expect(main).toMatch(new RegExp(openingTag("textarea", { "aria-label": "键盘输入内容" })));
+    expect(main).toMatch(new RegExp(openingTag("button", { "aria-label": "复位键盘视角", type: "button" })));
     expect(main).toMatch(new RegExp(
       `${openingTag("div", { class: "home-keyboard" })}\\s*${openingTag("div", { role: "status", "aria-live": "polite" })}`,
     ));
@@ -79,7 +81,9 @@ describe("app shell", () => {
       elementStart(main, "a", { href: "#main-content" }),
       elementStart(main, "header"),
       elementStart(main, "h1"),
+      elementStart(main, "textarea", { "aria-label": "键盘输入内容" }),
       elementStart(main, "div", { class: "home-keyboard" }),
+      elementStart(main, "button", { "aria-label": "复位键盘视角" }),
       elementStart(main, "p", { class: "key-prompt" }),
     ];
     expect(contentOrder).toEqual([...contentOrder].sort((first, second) => first - second));

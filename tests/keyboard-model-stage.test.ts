@@ -24,6 +24,11 @@ describe("KeyboardModel stage", () => {
     const source = new THREE.Group();
     source.add(
       node("bottomCase", 49.5),
+      node("battery", 20),
+      node("siliconeAcousticPad", 20),
+      node("pcb", 20),
+      node("plateFoam", 20),
+      node("plate", 20),
       node("stablizer", 7),
       node("misc", -8),
       node("shadowPlane", 0),
@@ -46,7 +51,12 @@ describe("KeyboardModel stage", () => {
 
     expect(source.getObjectByName("bottomCase")!.position.y).toBe(49.5);
     expect(keyboard.getObjectByName("bottomCase")!.position.y).toBe(0);
-    expect(keyboard.getObjectByName("stablizer")!.position.y).toBe(2);
+    expect(keyboard.getObjectByName("battery")!.position.y).toBe(0.65);
+    expect(keyboard.getObjectByName("siliconeAcousticPad")!.position.y).toBe(3.55);
+    expect(keyboard.getObjectByName("pcb")!.position.y).toBe(2.25);
+    expect(keyboard.getObjectByName("plateFoam")!.position.y).toBe(2.6);
+    expect(keyboard.getObjectByName("plate")!.position.y).toBe(3.15);
+    expect(keyboard.getObjectByName("stablizer")!.position.y).toBe(3.15);
     expect(keyboard.getObjectByName("misc")!.position.y).toBe(-0.03);
     expect(keyboard.getObjectByName("shadowPlane")!.visible).toBe(false);
   });

@@ -281,10 +281,10 @@ describe("keyboard scene capability and camera input", () => {
 
     renderToStaticMarkup(<ReadyKeyboardBinding ready registry={registry} />);
     expect(physicalKeyboardMock).toHaveBeenCalledOnce();
-    expect(physicalKeyboardMock).toHaveBeenCalledWith(registry);
+    expect(physicalKeyboardMock).toHaveBeenCalledWith(registry, undefined);
   });
 
-  it("frees yaw and clamps pitch and distance, restores defaults and removes every listener", () => {
+  it("frees yaw and pitch, clamps distance, restores defaults and removes every listener", () => {
     const element = new CameraEventTarget();
     const input = createCameraInputState();
     const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
@@ -305,11 +305,11 @@ describe("keyboard scene capability and camera input", () => {
     element.dispatch("pointermove", { clientX: 10000, clientY: 10000, pointerId: 1 });
     element.dispatch("wheel", { deltaY: 10000, preventDefault() {} });
     expect(input.target.yaw).toBeLessThan(-0.38);
-    expect(input.target.pitch).toBe(Math.PI / 2);
+    expect(input.target.pitch).toBeGreaterThan(2 * Math.PI);
     expect(input.target.distance).toBe(62);
 
     element.dispatch("dblclick", {});
-    expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, distance: 49 });
+    expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, roll: 0, distance: 49 });
     expect(input.parallax).toEqual({ yaw: 0, pitch: 0 });
 
     cleanup();
@@ -332,7 +332,7 @@ describe("keyboard scene capability and camera input", () => {
     cleanup();
   });
 
-  it("clamps pitch at the full lower bound (looking up from below)", () => {
+  it("accumulates pitch past a full revolution when dragged vertically", () => {
     const element = new CameraEventTarget();
     const input = createCameraInputState();
     const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
@@ -340,7 +340,21 @@ describe("keyboard scene capability and camera input", () => {
     element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
     element.dispatch("pointermove", { clientX: 100, clientY: -10000, pointerId: 1 });
 
-    expect(input.target.pitch).toBe(-Math.PI / 2);
+    expect(input.target.pitch).toBeLessThan(-2 * Math.PI);
+
+    cleanup();
+  });
+
+  it("accumulates roll past a full revolution with Shift-drag", () => {
+    const element = new CameraEventTarget();
+    const input = createCameraInputState();
+    const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
+
+    element.dispatch("pointerdown", { clientX: 0, clientY: 50, pointerId: 1 });
+    element.dispatch("pointermove", { clientX: 2000, clientY: 50, pointerId: 1, shiftKey: true });
+
+    expect(input.target.roll).toBeCloseTo(-2000 * 0.004, 10);
+    expect(Math.abs(input.target.roll)).toBeGreaterThan(2 * Math.PI);
 
     cleanup();
   });
@@ -378,6 +392,20 @@ describe("keyboard scene capability and camera input", () => {
       horizontalDistance * Math.cos(3.5),
     );
     expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
+  });
+
+  it("applies the accumulated roll after framing the camera", () => {
+    const camera = {
+      position: { set: vi.fn() },
+      lookAt: vi.fn(),
+      rotateZ: vi.fn(),
+    };
+    const input = createCameraInputState();
+    input.target.roll = 2 * Math.PI;
+
+    applyCameraFrame(camera as never, input, { ...input.target }, 1 / 60, vi.fn());
+
+    expect(camera.rotateZ).toHaveBeenCalledWith(2 * Math.PI);
   });
 
   it("stops dragging after capture loss or a window blur", () => {
@@ -440,7 +468,7 @@ describe("keyboard scene capability and camera input", () => {
     expect(() => applyCameraFrame(
       camera as never,
       createCameraInputState(),
-      { yaw: 0.08, pitch: 0.62, distance: 18 },
+      { yaw: 0.08, pitch: 0.62, roll: 0, distance: 18 },
       1 / 60,
       reportError,
     )).not.toThrow();

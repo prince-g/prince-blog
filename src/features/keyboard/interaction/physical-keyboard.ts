@@ -1,8 +1,11 @@
 import { MODEL_KEY_BY_CODE } from "../data/keyboard-key-map";
 import { type KeyRegistry } from "./key-registry";
 
-type KeyboardEventData = Pick<KeyboardEvent, "code" | "repeat" | "target">;
+type KeyboardEventData = Pick<KeyboardEvent, "code" | "repeat" | "target">
+  & Partial<Pick<KeyboardEvent, "key">>;
 type DocumentVisibility = Pick<Document, "visibilityState">;
+
+export type KeyboardTextInputHandler = (event: Pick<KeyboardEvent, "key">) => void;
 
 const editableTags = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
@@ -17,10 +20,14 @@ function modelKeyFor(code: string) {
   return (MODEL_KEY_BY_CODE as Record<string, string | undefined>)[code];
 }
 
-export function createPhysicalKeyboardHandlers(registry: KeyRegistry) {
+export function createPhysicalKeyboardHandlers(
+  registry: KeyRegistry,
+  onTextInput?: KeyboardTextInputHandler,
+) {
   return {
     keydown(event: KeyboardEventData) {
-      if (event.repeat || isEditableTarget(event.target)) return;
+      if (event.repeat) return;
+      if (!isEditableTarget(event.target)) onTextInput?.({ key: event.key ?? "" });
       const modelKey = modelKeyFor(event.code);
       if (modelKey) registry.press(modelKey);
     },

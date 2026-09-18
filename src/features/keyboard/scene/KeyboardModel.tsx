@@ -12,21 +12,26 @@ type KeyboardModelProps = Readonly<{
 }>;
 
 const FOLDED_PART_POSITIONS = {
-  battery: [-0.5, 1, -1.9],
+  battery: [-0.5, 0.65, -1.9],
   bottomCase: [0, 0, 0],
   feet: [0, 0.6, 0],
-  foam: [0, 2.37, 0],
+  foam: [0, 3.55, 0],
   misc: [0, -0.03, 0],
-  pcb: [0, 2.3, 0],
-  plate: [0, 2.42, 0],
-  plateFoam: [0, 2.3, 0],
+  pcb: [0, 2.25, 0],
+  plate: [0, 3.15, 0],
+  plateFoam: [0, 2.6, 0],
   rubberFeet: [0, 0.35, 0],
-  siliconeAcousticPad: [0, 3, 0],
-  stablizer: [0, 2, 0],
+  siliconeAcousticPad: [0, 3.55, 0],
+  stablizer: [0, 3.15, 0],
   topCaseB: [0, 0, 0],
   topCaseF: [0, 0, 0],
   topCaseL: [0, 0, 0],
   topCaseR: [0, 0, 0],
+} as const;
+
+const ASSEMBLY_HEIGHTS = {
+  keycaps: 4.5,
+  switches: 3.65,
 } as const;
 
 function keycapMesh(scene: THREE.Group, name: string): THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]> {
@@ -62,6 +67,7 @@ export function KeyboardModel({ plan, registry }: KeyboardModelProps) {
       <primitive object={keyboard} position={assets.definition.keyboardOffset} />
       {plan.keys.map((keycap) => (
         <KeycapMesh
+          assemblyHeight={ASSEMBLY_HEIGHTS.keycaps}
           key={keycap.modelKey}
           atlasTransform={assets.definition.keycapUVOffsetScale}
           bumpMap={assets.bumpMap}
@@ -73,6 +79,7 @@ export function KeyboardModel({ plan, registry }: KeyboardModelProps) {
         />
       ))}
       <SwitchInstances
+        assemblyHeight={ASSEMBLY_HEIGHTS.switches}
         keyboardOffset={assets.definition.keyboardOffset}
         orientation={assets.definition.switchOrientation}
         plan={plan}

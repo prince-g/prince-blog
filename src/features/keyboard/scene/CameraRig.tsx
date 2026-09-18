@@ -2,7 +2,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 
-type CameraTarget = { yaw: number; pitch: number; distance: number };
+type CameraTarget = { yaw: number; pitch: number; roll: number; distance: number };
 type CameraParallax = { yaw: number; pitch: number };
 
 export type CameraInputState = {
@@ -14,8 +14,7 @@ export type CameraErrorReporter = (cause: unknown) => void;
 
 type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
-const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, distance: 49 };
-const PITCH_RANGE = [-Math.PI / 2, Math.PI / 2] as const;
+const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, roll: 0, distance: 49 };
 const DISTANCE_RANGE = [38, 62] as const;
 const CAMERA_FOCUS_Y = 5;
 const PARALLAX_LIMIT = 0.025;
@@ -73,11 +72,14 @@ export function bindCameraInput(
     input.parallax.pitch = clamp(normalizedY, [-1, 1]) * PARALLAX_LIMIT;
 
     if (!activePointer || activePointer.id !== event.pointerId) return;
-    input.target.yaw = input.target.yaw - (event.clientX - activePointer.x) * DRAG_RADIANS_PER_PIXEL;
-    input.target.pitch = clamp(
-      input.target.pitch + (event.clientY - activePointer.y) * DRAG_RADIANS_PER_PIXEL,
-      PITCH_RANGE,
-    );
+    const deltaX = event.clientX - activePointer.x;
+    const deltaY = event.clientY - activePointer.y;
+    if (event.shiftKey) {
+      input.target.roll = input.target.roll - deltaX * DRAG_RADIANS_PER_PIXEL;
+    } else {
+      input.target.yaw = input.target.yaw - deltaX * DRAG_RADIANS_PER_PIXEL;
+      input.target.pitch = input.target.pitch + deltaY * DRAG_RADIANS_PER_PIXEL;
+    }
     activePointer.x = event.clientX;
     activePointer.y = event.clientY;
   };
@@ -142,7 +144,7 @@ export function bindCameraInput(
 }
 
 export function applyCameraFrame(
-  camera: Pick<THREE.Camera, "position" | "lookAt">,
+  camera: Pick<THREE.Camera, "position" | "lookAt"> & Partial<Pick<THREE.Camera, "rotateZ">>,
   controls: CameraInputState,
   current: CameraTarget,
   delta: number,
@@ -150,9 +152,10 @@ export function applyCameraFrame(
 ): void {
   try {
     const yaw = controls.target.yaw + controls.parallax.yaw;
-    const pitch = clamp(controls.target.pitch + controls.parallax.pitch, PITCH_RANGE);
+    const pitch = controls.target.pitch + controls.parallax.pitch;
     current.yaw = THREE.MathUtils.damp(current.yaw, yaw, 8, delta);
     current.pitch = THREE.MathUtils.damp(current.pitch, pitch, 8, delta);
+    current.roll = THREE.MathUtils.damp(current.roll, controls.target.roll, 8, delta);
     current.distance = THREE.MathUtils.damp(current.distance, controls.target.distance, 8, delta);
 
     const horizontalDistance = current.distance * Math.cos(current.pitch);
@@ -162,14 +165,18 @@ export function applyCameraFrame(
       horizontalDistance * Math.cos(current.yaw),
     );
     camera.lookAt(0, CAMERA_FOCUS_Y, 0);
+    camera.rotateZ?.(current.roll);
   } catch (cause) {
     onError(cause);
   }
 }
 
-type CameraRigProps = Readonly<{ onError: CameraErrorReporter }>;
+type CameraRigProps = Readonly<{
+  onError: CameraErrorReporter;
+  resetRequest?: number;
+}>;
 
-export function CameraRig({ onError }: CameraRigProps) {
+export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
   const input = useRef<CameraInputState | null>(null);
@@ -184,6 +191,11 @@ export function CameraRig({ onError }: CameraRigProps) {
   }, [onError]);
 
   useEffect(() => bindCameraInput(canvas, input.current!, reportError), [canvas, reportError]);
+
+  useEffect(() => {
+    resetInput(input.current!);
+    Object.assign(current.current, DEFAULT_TARGET);
+  }, [resetRequest]);
 
   useFrame((_, delta) => {
     applyCameraFrame(camera, input.current!, current.current, delta, reportError);

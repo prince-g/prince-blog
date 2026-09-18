@@ -1,5 +1,6 @@
 import { useCallback, useReducer, useState } from "react";
 import { KeyRegistry } from "../interaction/key-registry";
+import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 import { resetKeyboardAssetCaches } from "../model/use-keyboard-assets";
 import { KeyboardHeroContent } from "./KeyboardHeroContent";
 import { KeyboardHeroState } from "./KeyboardHeroState";
@@ -115,7 +116,12 @@ export function createWebGLCapabilityProbe(createCanvas?: () => WebGLCanvas): ()
   };
 }
 
-export function KeyboardHero() {
+type KeyboardHeroProps = Readonly<{
+  onTextInput?: KeyboardTextInputHandler;
+  resetRequest?: number;
+}>;
+
+export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
   const [registry] = useState(() => new KeyRegistry());
   const [orchestration] = useState(() => createKeyboardHeroOrchestration(registry));
   const [, rerender] = useReducer((version: number) => version + 1, 0);
@@ -142,6 +148,8 @@ export function KeyboardHero() {
       onReady={handleReady}
       onRetry={retry}
       onRuntimeError={handleRuntimeError}
+      onTextInput={onTextInput}
+      resetRequest={resetRequest}
     />
   );
 }

@@ -1,4 +1,5 @@
 import { usePhysicalKeyboard } from "../interaction/use-physical-keyboard";
+import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 import { KeyboardCanvas } from "./KeyboardCanvas";
 import { KeyboardErrorBoundary } from "./KeyboardErrorBoundary";
 import { KeyboardHeroState } from "./KeyboardHeroState";
@@ -8,15 +9,18 @@ import type { KeyboardHeroRuntimeState } from "./KeyboardHero";
 type ReadyKeyboardBindingProps = Readonly<{
   ready: boolean;
   registry: KeyRegistry;
+  onTextInput?: KeyboardTextInputHandler;
 }>;
 
-function PhysicalKeyboardBinding({ registry }: Pick<ReadyKeyboardBindingProps, "registry">) {
-  usePhysicalKeyboard(registry);
+type PhysicalKeyboardBindingProps = Pick<ReadyKeyboardBindingProps, "registry" | "onTextInput">;
+
+function PhysicalKeyboardBinding({ registry, onTextInput }: PhysicalKeyboardBindingProps) {
+  usePhysicalKeyboard(registry, onTextInput);
   return null;
 }
 
-export function ReadyKeyboardBinding({ ready, registry }: ReadyKeyboardBindingProps) {
-  return ready ? <PhysicalKeyboardBinding registry={registry} /> : null;
+export function ReadyKeyboardBinding({ ready, registry, onTextInput }: ReadyKeyboardBindingProps) {
+  return ready ? <PhysicalKeyboardBinding registry={registry} onTextInput={onTextInput} /> : null;
 }
 
 type KeyboardHeroContentProps = Readonly<{
@@ -25,6 +29,8 @@ type KeyboardHeroContentProps = Readonly<{
   onReady: () => void;
   onRetry: () => void;
   onRuntimeError: (cause: unknown) => void;
+  onTextInput?: KeyboardTextInputHandler;
+  resetRequest?: number;
 }>;
 
 export function KeyboardHeroContent({
@@ -33,6 +39,8 @@ export function KeyboardHeroContent({
   onReady,
   onRetry,
   onRuntimeError,
+  onTextInput,
+  resetRequest,
 }: KeyboardHeroContentProps) {
   if (state.status === "error") {
     return (
@@ -53,11 +61,16 @@ export function KeyboardHeroContent({
           key={state.canvasKey}
           attempt={state.canvasKey}
           registry={registry}
+          resetRequest={resetRequest}
           onReady={onReady}
           onRuntimeError={onRuntimeError}
         />
         {state.status === "loading" && <KeyboardHeroState state="loading" />}
-        <ReadyKeyboardBinding ready={state.status === "ready"} registry={registry} />
+        <ReadyKeyboardBinding
+          ready={state.status === "ready"}
+          registry={registry}
+          onTextInput={onTextInput}
+        />
       </KeyboardErrorBoundary>
     </section>
   );

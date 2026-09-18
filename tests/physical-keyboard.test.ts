@@ -57,14 +57,28 @@ describe("physical keyboard", () => {
     expect(b.press).not.toHaveBeenCalled();
   });
 
-  it("ignores repeats and editable targets", () => {
+  it("ignores repeats and animates keys typed in editable targets", () => {
     const registry = new KeyRegistry(); const a = actuator(); registry.register("KeyA", a);
     const handlers = createPhysicalKeyboardHandlers(registry);
     handlers.keydown({ code: "KeyA", repeat: true, target: null });
     handlers.keydown({ code: "KeyA", repeat: false, target: Object.assign(new EventTarget(), { tagName: "INPUT" }) });
     handlers.keydown({ code: "KeyA", repeat: false, target: Object.assign(new EventTarget(), { tagName: "TEXTAREA" }) });
     handlers.keydown({ code: "KeyA", repeat: false, target: Object.assign(new EventTarget(), { isContentEditable: true }) });
-    expect(a.press).not.toHaveBeenCalled();
+    expect(a.press).toHaveBeenCalledOnce();
+  });
+
+  it("forwards non-editable typing to the text input callback", () => {
+    const registry = new KeyRegistry();
+    const onTextInput = vi.fn();
+    const handlers = createPhysicalKeyboardHandlers(registry, onTextInput);
+
+    handlers.keydown({ code: "KeyA", key: "a", repeat: false, target: null });
+    handlers.keydown({ code: "Backspace", key: "Backspace", repeat: false, target: null });
+    handlers.keydown({ code: "KeyB", key: "b", repeat: false, target: Object.assign(new EventTarget(), { tagName: "TEXTAREA" }) });
+
+    expect(onTextInput).toHaveBeenNthCalledWith(1, { key: "a" });
+    expect(onTextInput).toHaveBeenNthCalledWith(2, { key: "Backspace" });
+    expect(onTextInput).toHaveBeenCalledTimes(2);
   });
 
   it("releases a mapped key on keyup even when it comes from an editable target", () => {

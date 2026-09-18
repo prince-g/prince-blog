@@ -13,6 +13,7 @@ const PRESS_EMISSIVE = new THREE.Color("#caff6a");
 type KeycapMaterial = THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial;
 
 type KeycapMeshProps = Readonly<{
+  assemblyHeight?: number;
   atlasTransform: readonly [number, number, number, number];
   bumpMap: THREE.Texture;
   keyboardOffset: readonly [number, number, number];
@@ -31,6 +32,7 @@ function cloneMaterial(source: THREE.Material | THREE.Material[]): KeycapMateria
 }
 
 export function KeycapMesh({
+  assemblyHeight = 0,
   atlasTransform,
   bumpMap,
   keyboardOffset,
@@ -41,7 +43,7 @@ export function KeycapMesh({
 }: KeycapMeshProps) {
   const mesh = useRef<THREE.Mesh>(null);
   const animation = useRef(createKeyAnimationState());
-  const baseY = keyboardOffset[1] + keycap.position.y;
+  const baseY = keyboardOffset[1] + keycap.position.y + assemblyHeight;
   const material = useMemo(() => {
     const next = cloneMaterial(source.material);
     const legend = computeLegendTransform(keycap.position, atlasTransform);
