@@ -1,53 +1,47 @@
 import { describe, expect, it } from "vitest";
 import { createKeyAnimationState, stepKeyAnimation } from "../src/features/keyboard/animation/key-animation";
+import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
 
-describe("key animation", () => {
-  it("moves only the pressed state toward -0.16 and glow 1", () => {
-    const pressed = createKeyAnimationState();
+describe("mechanical key travel", () => {
+  it("moves only the held key down and holds at the switch travel", () => {
+    const key = createKeyAnimationState();
     const neighbor = createKeyAnimationState();
-    pressed.pressed = true;
-
-    stepKeyAnimation(pressed, 1 / 60);
-    stepKeyAnimation(neighbor, 1 / 60);
-
-    expect(pressed.offsetY).toBeLessThan(0);
-    expect(pressed.glow).toBeGreaterThan(0);
+    key.pressed = true;
+    stepKeyAnimation(key, 0.035);
+    stepKeyAnimation(neighbor, 0.035);
+    expect(key.offsetY).toBeLessThan(-0.15);
+    expect(key.offsetY).toBeGreaterThanOrEqual(-0.25);
     expect(neighbor.offsetY).toBe(0);
-    expect(neighbor.glow).toBe(0);
-
-    for (let frame = 0; frame < 120; frame += 1) {
-      stepKeyAnimation(pressed, 1 / 60);
-    }
-    expect(pressed.offsetY).toBeCloseTo(-0.16, 8);
-    expect(pressed.glow).toBeCloseTo(1, 8);
+    stepKeyAnimation(key, 1);
+    expect(key.offsetY).toBeCloseTo(-0.25, 5);
   });
-
-  it("is independent of the number of frames used for the same elapsed time", () => {
-    const oneFrame = createKeyAnimationState();
-    const sixtyFrames = createKeyAnimationState();
-    oneFrame.pressed = true;
-    sixtyFrames.pressed = true;
-
-    stepKeyAnimation(oneFrame, 1);
-    for (let frame = 0; frame < 60; frame += 1) {
-      stepKeyAnimation(sixtyFrames, 1 / 60);
-    }
-
-    expect(sixtyFrames.offsetY).toBeCloseTo(oneFrame.offsetY, 10);
-    expect(sixtyFrames.glow).toBeCloseTo(oneFrame.glow, 10);
+  it("keeps held travel independent of frame rate", () => {
+    const a = createKeyAnimationState(), b = createKeyAnimationState();
+    a.pressed = b.pressed = true;
+    stepKeyAnimation(a, 0.1);
+    for (let i = 0; i < 6; i++) stepKeyAnimation(b, 1 / 60);
+    expect(a.offsetY).toBeCloseTo(b.offsetY, 8);
   });
-
-  it("returns released state to neutral values and snaps tiny tails to zero", () => {
-    const state = createKeyAnimationState();
-    state.pressed = true;
-    stepKeyAnimation(state, 1);
-    state.pressed = false;
-
-    for (let frame = 0; frame < 240; frame += 1) {
-      stepKeyAnimation(state, 1 / 60);
-    }
-
-    expect(state.offsetY).toBe(0);
-    expect(state.glow).toBe(0);
+  it("latches a quick tap occurring between two render frames and releases naturally", () => {
+    const registry = new KeyRegistry();
+    registry.press("KeyA");
+    registry.release("KeyA");
+    const key = registry.getAnimation("KeyA");
+    stepKeyAnimation(key, 1 / 60);
+    expect(key.offsetY).toBeLessThan(-0.05);
+    for (let i = 0; i < 60; i++) stepKeyAnimation(key, 1 / 60);
+    expect(key.offsetY).toBe(0);
+  });
+  it("resets both a held key and a released key that is still rebounding on blur", () => {
+    const registry = new KeyRegistry();
+    registry.press("KeyA"); registry.press("Space");
+    const a = registry.getAnimation("KeyA"), space = registry.getAnimation("Space");
+    stepKeyAnimation(a, 0.1); stepKeyAnimation(space, 0.1);
+    registry.release("KeyA");
+    registry.releaseAll();
+    expect(a.offsetY).toBe(0); expect(space.offsetY).toBe(0);
+    expect(a.pressed).toBe(false); expect(space.pressed).toBe(false);
+    stepKeyAnimation(a, 1 / 60);
+    expect(a.offsetY).toBe(0);
   });
 });

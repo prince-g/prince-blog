@@ -6,6 +6,7 @@ import keyboardData from "../public/models/keychron-k2-he/models/keyboards/K_2_H
 import { buildAssemblyPlan } from "../src/features/keyboard/model/build-assembly-plan";
 import { parseKeyboardData } from "../src/features/keyboard/model/parse-keyboard-data";
 import { SwitchInstances } from "../src/features/keyboard/scene/SwitchInstances";
+import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
 
 const switchPartNames = [
   "upperhousing",
@@ -67,6 +68,7 @@ async function mountSwitches(switchScene = createSwitchScene()) {
     size: { width: 1440, height: 900, top: 0, left: 0 },
   });
   const plan = buildAssemblyPlan(parseKeyboardData(keyboardData));
+  const registry = new KeyRegistry();
   let store: ReturnType<typeof root.render>;
 
   await act(async () => {
@@ -77,6 +79,7 @@ async function mountSwitches(switchScene = createSwitchScene()) {
         keyboardOffset: [0, 0, 0],
         orientation: "south",
         plan,
+        registry,
         switchScene,
       }),
     ));
@@ -86,6 +89,8 @@ async function mountSwitches(switchScene = createSwitchScene()) {
   return {
     instances: instanceMeshes(store!.getState().scene),
     plan,
+    registry,
+    frame: () => store!.getState().advance(1, true),
     switchScene,
     async unmount() {
       await act(async () => {
@@ -104,6 +109,31 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("SwitchInstances", () => {
+  it("moves only the matching stem and compresses its spring with shared key travel", async () => {
+    const mounted = await mountSwitches();
+    try {
+      const index = mounted.plan.keys.findIndex((key) => key.modelKey === "KeyA");
+      const stem = mounted.instances.find((part) => part.name === "stemInstances")!;
+      const spring = mounted.instances.find((part) => part.name === "springInstances")!;
+      const before = new THREE.Matrix4(), after = new THREE.Matrix4(), neighbor = new THREE.Matrix4();
+      stem.getMatrixAt(index, before);
+      stem.getMatrixAt(0, neighbor);
+      mounted.registry.getAnimation("KeyA").offsetY = -0.25;
+      mounted.frame();
+      stem.getMatrixAt(index, after);
+      expect(after.elements[13] - before.elements[13]).toBeCloseTo(-0.25);
+      stem.getMatrixAt(0, after);
+      expect(after.elements).toEqual(neighbor.elements);
+      const source = mounted.switchScene.getObjectByName("spring") as THREE.Mesh;
+      const target = new THREE.Mesh(source.geometry, source.material);
+      spring.getMorphAt(index, target);
+      expect(target.morphTargetInfluences![0]).toBeCloseTo(1);
+      mounted.registry.releaseAll();
+      mounted.frame();
+      stem.getMatrixAt(index, after);
+      expect(after.elements).toEqual(before.elements);
+    } finally { await mounted.unmount(); }
+  });
   it("copies source morph weights to every spring instance", async () => {
     const switchScene = createSwitchScene();
     const source = switchScene.getObjectByName("spring") as THREE.Mesh;

@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 
 type CameraTarget = { yaw: number; pitch: number; roll: number; distance: number };
@@ -26,6 +26,13 @@ export const INITIAL_CAMERA_POSITION = [
   CAMERA_FOCUS_Y + DEFAULT_TARGET.distance * Math.sin(DEFAULT_TARGET.pitch),
   DEFAULT_TARGET.distance * Math.cos(DEFAULT_TARGET.pitch) * Math.cos(DEFAULT_TARGET.yaw),
 ] as const;
+
+export function fitKeyboardCamera(camera: THREE.Camera, width: number, height: number): void {
+  if (!(camera instanceof THREE.PerspectiveCamera) || width <= 0 || height <= 0) return;
+  // Keep the full board visible in portrait without changing the orbit or scroll distance.
+  camera.zoom = Math.min(1, width / height / 1.35);
+  camera.updateProjectionMatrix();
+}
 
 function clamp(value: number, [minimum, maximum]: readonly [number, number]): number {
   return Math.min(maximum, Math.max(minimum, value));
@@ -179,6 +186,7 @@ type CameraRigProps = Readonly<{
 export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
+  const size = useThree((state) => state.size);
   const input = useRef<CameraInputState | null>(null);
   const current = useRef<CameraTarget>({ ...DEFAULT_TARGET });
   const errorReported = useRef(false);
@@ -191,6 +199,10 @@ export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
   }, [onError]);
 
   useEffect(() => bindCameraInput(canvas, input.current!, reportError), [canvas, reportError]);
+
+  useLayoutEffect(() => {
+    fitKeyboardCamera(camera, size.width, size.height);
+  }, [camera, size.width, size.height]);
 
   useEffect(() => {
     resetInput(input.current!);

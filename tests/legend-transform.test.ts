@@ -12,6 +12,9 @@ describe("legend transform", () => {
     // 0.49 - (0.9500422477722168 / 12.79) = 0.415684...
     expect(value.offsetX).toBeCloseTo(0.1589, 3);
     expect(value.offsetY).toBeCloseTo(0.4157, 3);
+    // A 1.82-unit key covers only its own patch of the full keyboard atlas.
+    expect(value.scaleX * 1.82).toBeCloseTo(0.056804, 5);
+    expect(value.scaleY * 1.82).toBeCloseTo(-0.142299, 5);
   });
 
   it("uses each axis scale and preserves finite boundary values", () => {

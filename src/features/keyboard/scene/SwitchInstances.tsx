@@ -1,6 +1,9 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { AssemblyPlan, KeyboardDefinition } from "../model/keyboard-types";
+import type { KeyRegistry } from "../interaction/key-registry";
+import { KEY_TRAVEL } from "../animation/key-animation";
 
 const SWITCH_PARTS = [
   "upperhousing",
@@ -17,6 +20,7 @@ type SwitchInstancesProps = Readonly<{
   orientation: KeyboardDefinition["switchOrientation"];
   plan: AssemblyPlan;
   switchScene: THREE.Group;
+  registry: KeyRegistry;
 }>;
 
 function switchMesh(scene: THREE.Group, name: string): THREE.Mesh {
@@ -40,6 +44,7 @@ export function SwitchInstances({
   orientation,
   plan,
   switchScene,
+  registry,
 }: SwitchInstancesProps) {
   return SWITCH_PARTS.map((name) => (
     <SwitchPartInstances
@@ -51,6 +56,7 @@ export function SwitchInstances({
       plan={plan}
       source={switchMesh(switchScene, name)}
       switchScene={switchScene}
+      registry={registry}
     />
   ));
 }
@@ -68,8 +74,13 @@ function SwitchPartInstances({
   plan,
   source,
   switchScene,
+  registry,
 }: SwitchPartInstancesProps) {
   const instance = useRef<THREE.InstancedMesh>(null);
+  const baseMatrices = useRef<THREE.Matrix4[]>([]);
+  const previousOffsets = useRef<number[]>([]);
+  const scratch = useMemo(() => new THREE.Matrix4(), []);
+  const morph = useMemo(() => new THREE.Mesh(source.geometry, source.material), [source]);
 
   useLayoutEffect(() => {
     switchScene.updateMatrixWorld(true);
@@ -93,11 +104,37 @@ function SwitchPartInstances({
         .multiply(orientationMatrix)
         .multiply(source.matrixWorld);
       mesh.setMatrixAt(index, matrix);
+      baseMatrices.current[index] = matrix.clone();
       if (source.morphTargetInfluences) mesh.setMorphAt(index, source);
     });
     mesh.instanceMatrix.needsUpdate = true;
+    previousOffsets.current = [];
     if (mesh.morphTexture) mesh.morphTexture.needsUpdate = true;
   }, [assemblyHeight, keyboardOffset, orientation, plan.keys, source, switchScene]);
+
+  useFrame(() => {
+    const mesh = instance.current;
+    if (!mesh || !["stem", "stem_magnet", "spring"].includes(name)) return;
+    let changed = false;
+    plan.keys.forEach((key, index) => {
+      const offset = registry.getAnimation(key.modelKey).offsetY;
+      if (previousOffsets.current[index] === offset) return;
+      previousOffsets.current[index] = offset;
+      changed = true;
+      if (name === "spring" && morph.morphTargetInfluences) {
+        morph.morphTargetInfluences[0] = THREE.MathUtils.clamp(-offset / KEY_TRAVEL, 0, 1);
+        mesh.setMorphAt(index, morph);
+      } else {
+        scratch.copy(baseMatrices.current[index]);
+        scratch.elements[13] += offset;
+        mesh.setMatrixAt(index, scratch);
+      }
+    });
+    if (changed) {
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.morphTexture) mesh.morphTexture.needsUpdate = true;
+    }
+  }, -1);
 
   return (
     <instancedMesh

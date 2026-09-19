@@ -1,24 +1,41 @@
 export type KeyAnimationState = {
   pressed: boolean;
   offsetY: number;
-  glow: number;
+  velocity: number;
+  holdRemaining: number;
 };
 
+// The supplied switch spring morph compresses by about 0.252 model units.
+export const KEY_TRAVEL = 0.25;
 export const createKeyAnimationState = (): KeyAnimationState => ({
-  pressed: false,
-  offsetY: 0,
-  glow: 0,
+  pressed: false, offsetY: 0, velocity: 0, holdRemaining: 0,
 });
 
+function advance(state: KeyAnimationState, delta: number, down: boolean): void {
+  const target = down ? -KEY_TRAVEL : 0;
+  const frequency = down ? 100 : 38;
+  const displacement = state.offsetY - target;
+  const coefficient = state.velocity + frequency * displacement;
+  const decay = Math.exp(-frequency * delta);
+  state.offsetY = target + (displacement + coefficient * delta) * decay;
+  state.velocity = (state.velocity - frequency * coefficient * delta) * decay;
+  if (state.offsetY < -KEY_TRAVEL || state.offsetY > 0) {
+    state.offsetY = Math.max(-KEY_TRAVEL, Math.min(0, state.offsetY));
+    state.velocity = 0;
+  }
+}
+
 export function stepKeyAnimation(state: KeyAnimationState, delta: number): void {
-  const positionTarget = state.pressed ? -0.16 : 0;
-  const glowTarget = state.pressed ? 1 : 0;
-  const positionAlpha = 1 - Math.exp(-24 * delta);
-  const glowAlpha = 1 - Math.exp(-(state.pressed ? 30 : 14) * delta);
-
-  state.offsetY += (positionTarget - state.offsetY) * positionAlpha;
-  state.glow += (glowTarget - state.glow) * glowAlpha;
-
-  if (!state.pressed && Math.abs(state.offsetY) < 0.0001) state.offsetY = 0;
-  if (!state.pressed && state.glow < 0.0001) state.glow = 0;
+  if (!Number.isFinite(delta) || delta <= 0) return;
+  const heldTime = Math.min(delta, state.holdRemaining);
+  state.holdRemaining -= heldTime;
+  if (state.pressed) advance(state, delta, true);
+  else {
+    // A down/up pair between frames still has a visible minimum key stroke.
+    if (heldTime > 0) advance(state, heldTime, true);
+    if (delta > heldTime) advance(state, delta - heldTime, false);
+  }
+  if (!state.pressed && state.holdRemaining === 0 && Math.abs(state.offsetY) < 0.00001 && Math.abs(state.velocity) < 0.001) {
+    state.offsetY = state.velocity = 0;
+  }
 }

@@ -15,7 +15,7 @@ const GLB_URLS = [
   `${KEYCHRON_ASSET_ROOT}/models/common/common.glb`,
 ];
 const TEXTURE_URLS = [
-  `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/textures/keycap_font_windows.jpg`,
+  `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/textures/keycap_font_mac.jpg`,
   `${KEYCHRON_ASSET_ROOT}/models/keycaps/KSA/keycap-bump-n.jpg`,
 ];
 
@@ -67,7 +67,9 @@ export function useKeyboardAssets() {
   const definition = use(getKeyboardDefinition(KEYBOARD_DEFINITION));
 
   legendAtlas.colorSpace = SRGBColorSpace;
-  legendAtlas.flipY = false;
+  // The reference legends use a board-space projection; the JPEG has a top-left origin.
+  legendAtlas.flipY = true;
+  legendAtlas.anisotropy = 8;
   bumpMap.flipY = false;
 
   return {

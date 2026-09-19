@@ -78,10 +78,11 @@ export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError 
     <>
       <directionalLight
         castShadow
-        color="#fff4e8"
-        intensity={3.4}
+        color="#ffffff"
+        intensity={2}
         position={[7, 12, 9]}
         shadow-bias={-0.0002}
+        shadow-normalBias={0.035}
         shadow-camera-bottom={-10}
         shadow-camera-far={45}
         shadow-camera-left={-20}
@@ -90,13 +91,7 @@ export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError 
         shadow-mapSize-height={2048}
         shadow-mapSize-width={2048}
       />
-      <spotLight
-        color="#caff6a"
-        intensity={18}
-        position={[-12, 6, -8]}
-        angle={0.52}
-        penumbra={1}
-      />
+      <hemisphereLight color="#ffffff" groundColor="#dad2c5" intensity={0.35} />
       <group ref={product}>
         <KeyboardModel plan={plan} registry={registry} />
       </group>

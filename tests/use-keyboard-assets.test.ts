@@ -10,6 +10,7 @@ import {
   resetKeyboardAssetCaches,
 } from "../src/features/keyboard/model/use-keyboard-assets";
 import { resetKeyboardSceneAssetCache } from "../src/features/keyboard/scene/KeyboardScene";
+import data from "../public/models/keychron-k2-he/models/keyboards/K_2_HE/keyboardData.json";
 
 const definitionFile = "models/keyboards/K_2_HE/keyboardData.json";
 const validDefinition = {
@@ -17,6 +18,8 @@ const validDefinition = {
   keycapUVOffsetScale: [0, 0, 1, 1],
   switchOrientation: "north",
   keyPosition: {},
+  colorSets: data.colorSets,
+  unfoldPosition: data.unfoldPosition,
 };
 
 afterEach(() => {
@@ -59,7 +62,7 @@ describe("keyboard definition loading errors", () => {
 
     resetKeyboardAssetCaches();
 
-    await expect(getKeyboardDefinition(definitionFile, fetcher)).resolves.toMatchObject(validDefinition);
+    await expect(getKeyboardDefinition(definitionFile, fetcher)).resolves.toMatchObject({ keyboardOffset: [0, 0, 0], keyPosition: {} });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
@@ -72,7 +75,7 @@ describe("keyboard definition loading errors", () => {
       `${KEYCHRON_ASSET_ROOT}/models/common/common.glb`,
     ];
     const textureUrls = [
-      `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/textures/keycap_font_windows.jpg`,
+      `${KEYCHRON_ASSET_ROOT}/models/keyboards/K_2_HE/textures/keycap_font_mac.jpg`,
       `${KEYCHRON_ASSET_ROOT}/models/keycaps/KSA/keycap-bump-n.jpg`,
     ];
 

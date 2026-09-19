@@ -1,5 +1,5 @@
 export type LegendPosition = Readonly<{ x: number; z: number }>;
-export type LegendTransform = Readonly<{ offsetX: number; offsetY: number }>;
+export type LegendTransform = Readonly<{ offsetX: number; offsetY: number; scaleX: number; scaleY: number }>;
 
 export function computeLegendTransform(
   position: LegendPosition,
@@ -19,5 +19,5 @@ export function computeLegendTransform(
     throw new Error("legend transform result must be finite");
   }
 
-  return { offsetX, offsetY };
+  return { offsetX, offsetY, scaleX: 1 / atlasScaleX, scaleY: -1 / atlasScaleY };
 }
