@@ -1,20 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
 import keyboardData from "../public/models/keychron-k2-he/models/keyboards/K_2_HE/keyboardData.json";
 import { parseKeyboardData } from "../src/features/keyboard/model/parse-keyboard-data";
 import { buildAssemblyPlan } from "../src/features/keyboard/model/build-assembly-plan";
 import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
+import type { SceneMotion } from "../src/features/keyboard/animation/experience";
+
+const frames = vi.hoisted(() => ({ callbacks: [] as Array<() => void> }));
 
 vi.mock("react", async (importOriginal) => ({
   ...await importOriginal<typeof import("react")>(),
   useMemo: <Value>(factory: () => Value) => factory(),
   useEffect: () => {},
+  useRef: <Value>(value: Value) => ({ current: value }),
 }));
+
+vi.mock("@react-three/fiber", () => ({ useFrame: (callback: () => void) => frames.callbacks.push(callback) }));
 
 const assetMocks = vi.hoisted(() => ({ useKeyboardAssets: vi.fn() }));
 
 vi.mock("../src/features/keyboard/model/use-keyboard-assets", () => assetMocks);
+beforeEach(() => { frames.callbacks = []; });
 
 function node(name: string, y: number) {
   const part = new THREE.Group();
@@ -24,6 +31,31 @@ function node(name: string, y: number) {
 }
 
 describe("KeyboardModel stage", () => {
+  it("animates complete layers including the top-case parent and hides the board outside focused-switch space", () => {
+    const source = new THREE.Group();
+    source.add(node("bottomCase", 49), node("topCaseF", 0), node("topCaseL", 0), node("misc", -8), node("plate", 20));
+    assetMocks.useKeyboardAssets.mockReturnValue({ keyboardScene: source, keycapScene: new THREE.Group(), definition: parseKeyboardData(keyboardData) });
+    const motion: SceneMotion = { assembly: 1, reveal: 0.5, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const view = KeyboardModel({ plan: { keys: [], keycapModels: new Set() }, registry: new KeyRegistry(), motion });
+    const boardElement = view.props.children[0];
+    const board = new THREE.Group(), deck = new THREE.Group();
+    boardElement.props.ref.current = board;
+    boardElement.props.children[1].props.ref.current = deck;
+    const keyboard = boardElement.props.children[0].props.object as THREE.Group;
+    frames.callbacks[0]();
+    expect(keyboard.getObjectByName("assembledTopCase")!.position.y).toBe(22.5);
+    expect(keyboard.getObjectByName("topCaseF")!.parent!.name).toBe("assembledTopCase");
+    expect(keyboard.getObjectByName("topCaseL")!.position.x).toBe(-3);
+    expect(keyboard.getObjectByName("plate")!.position.y).toBe(21.3);
+    expect(deck.rotation.x).toBe(0);
+    motion.assembly = 0; motion.reveal = 1; motion.boardExit = 1;
+    frames.callbacks[0]();
+    expect(board.visible).toBe(false);
+    expect(board.position.y).toBe(-35.37);
+    expect(keyboard.getObjectByName("plate")!.position.y).toBe(2.42);
+    expect(view.props.children[1].props.position.y).toBeGreaterThan(2);
+    expect(source.getObjectByName("bottomCase")!.position.y).toBe(49);
+  });
   it("uses a folded clone of the source keyboard instead of its exploded GLB layout", () => {
     const source = new THREE.Group();
     source.add(

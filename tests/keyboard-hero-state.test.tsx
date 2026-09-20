@@ -20,8 +20,10 @@ import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
 
 type CapturedHeroProps = Readonly<{
   onReady: () => void;
+  onAssembled: () => void;
   onRetry: () => void;
   onRuntimeError: (cause: unknown) => void;
+  state: { status: string };
 }>;
 
 const rootHarness = vi.hoisted(() => {
@@ -212,19 +214,31 @@ describe("keyboard scene errors", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it("drives ready, runtime error and retry through the KeyboardHero root", () => {
+  it("waits for assembly before binding input, then handles runtime error and retry through the root", () => {
     vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
     const root = rootHarness.render(() => <KeyboardHero />);
     renderToStaticMarkup(root);
 
     expect(heroContentMocks.props).not.toBeNull();
     const initialProps = heroContentMocks.props!;
+    expect(initialProps.state.status).toBe("loading");
+    expect(physicalKeyboardMock).not.toHaveBeenCalled();
     initialProps.onReady!();
     renderToStaticMarkup(rootHarness.output);
 
+    expect(heroContentMocks.props!.state.status).toBe("assembling");
+    const assemblingBinding = findElement(heroContentMocks.view, ReadyKeyboardBinding);
+    expect((assemblingBinding!.props as { ready: boolean }).ready).toBe(false);
+    expect(physicalKeyboardMock).not.toHaveBeenCalled();
+    expect(renderToStaticMarkup(heroContentMocks.view)).toContain('aria-valuenow="100"');
+
+    heroContentMocks.props!.onAssembled();
+    renderToStaticMarkup(rootHarness.output);
     const readyBinding = findElement(heroContentMocks.view, ReadyKeyboardBinding);
     expect(readyBinding).not.toBeNull();
     expect((readyBinding!.props as { ready: boolean }).ready).toBe(true);
+    expect(heroContentMocks.props!.state.status).toBe("ready");
+    expect(physicalKeyboardMock).toHaveBeenCalled();
 
     heroContentMocks.props!.onRuntimeError!(new Error("frame failed"));
     renderToStaticMarkup(rootHarness.output);
@@ -240,6 +254,7 @@ describe("keyboard scene errors", () => {
     const retryCanvas = findElement(heroContentMocks.view, KeyboardCanvas);
 
     expect(retryCanvas).not.toBeNull();
+    expect(heroContentMocks.props!.state.status).toBe("loading");
     expect(retryCanvas!.key).toBe("1");
     expect((retryCanvas!.props as { attempt: number }).attempt).toBe(1);
   });
@@ -274,7 +289,7 @@ describe("keyboard scene capability and camera input", () => {
     expect(physicalKeyboardMock).not.toHaveBeenCalled();
   });
 
-  it("binds the physical keyboard only after the model is ready", () => {
+  it("binds the physical keyboard only after the complete scene is ready", () => {
     const registry = new KeyRegistry();
     renderToStaticMarkup(<ReadyKeyboardBinding ready={false} registry={registry} />);
     expect(physicalKeyboardMock).not.toHaveBeenCalled();
@@ -284,32 +299,35 @@ describe("keyboard scene capability and camera input", () => {
     expect(physicalKeyboardMock).toHaveBeenCalledWith(registry, undefined);
   });
 
-  it("frees yaw and pitch, clamps distance, restores defaults and removes every listener", () => {
+  it("keeps hover still, allows drag rotation, clamps distance and restores the straight-on default", () => {
     const element = new CameraEventTarget();
     const input = createCameraInputState();
     const cleanup = bindCameraInput(element as unknown as HTMLCanvasElement, input);
 
     element.dispatch("pointermove", { clientX: 200, clientY: 0, pointerId: 1 });
-    expect(input.parallax).toEqual({ yaw: 0.025, pitch: 0.025 });
+    expect(input.parallax).toEqual({ yaw: 0, pitch: 0 });
+    expect(input.target).toEqual({ yaw: 0, pitch: 1.02, roll: 0, distance: 64 });
 
     element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
     element.dispatch("pointermove", { clientX: 101, clientY: 52, pointerId: 1 });
-    expect(input.target.yaw).toBeCloseTo(0.076);
-    expect(input.target.pitch).toBeCloseTo(0.628);
+    expect(input.target.yaw).toBeCloseTo(-0.004);
+    expect(input.target.pitch).toBeCloseTo(1.028);
 
     const wheel = { deltaY: 100, preventDefault: vi.fn() };
     element.dispatch("wheel", wheel);
-    expect(input.target.distance).toBeCloseTo(49.8);
+    expect(input.target.distance).toBeCloseTo(64.8);
     expect(wheel.preventDefault).toHaveBeenCalledOnce();
 
     element.dispatch("pointermove", { clientX: 10000, clientY: 10000, pointerId: 1 });
     element.dispatch("wheel", { deltaY: 10000, preventDefault() {} });
     expect(input.target.yaw).toBeLessThan(-0.38);
     expect(input.target.pitch).toBeGreaterThan(2 * Math.PI);
-    expect(input.target.distance).toBe(62);
+    expect(input.target.distance).toBe(92);
+    element.dispatch("wheel", { deltaY: -10000, preventDefault() {} });
+    expect(input.target.distance).toBe(44);
 
     element.dispatch("dblclick", {});
-    expect(input.target).toEqual({ yaw: 0.08, pitch: 0.62, roll: 0, distance: 49 });
+    expect(input.target).toEqual({ yaw: 0, pitch: 1.02, roll: 0, distance: 64 });
     expect(input.parallax).toEqual({ yaw: 0, pitch: 0 });
 
     cleanup();
@@ -326,8 +344,8 @@ describe("keyboard scene capability and camera input", () => {
     element.dispatch("pointerdown", { clientX: 0, clientY: 50, pointerId: 1 });
     element.dispatch("pointermove", { clientX: 2000, clientY: 50, pointerId: 1 });
 
-    expect(input.target.yaw).toBeCloseTo(0.08 - 2000 * 0.004, 10);
-    expect(Math.abs(input.target.yaw - 0.08)).toBeGreaterThan(2 * Math.PI);
+    expect(input.target.yaw).toBeCloseTo(-2000 * 0.004, 10);
+    expect(Math.abs(input.target.yaw)).toBeGreaterThan(2 * Math.PI);
 
     cleanup();
   });
@@ -359,21 +377,23 @@ describe("keyboard scene capability and camera input", () => {
     cleanup();
   });
 
-  it("frames the desktop keyboard below the title's visual lane", () => {
+  it("centers the default camera with no horizontal tilt or roll", () => {
     const camera = {
       position: { set: vi.fn() },
       lookAt: vi.fn(),
+      rotateZ: vi.fn(),
     };
     const input = createCameraInputState();
 
     applyCameraFrame(camera as never, input, { ...input.target }, 1 / 60, vi.fn());
 
     expect(camera.position.set).toHaveBeenCalledWith(
-      expect.any(Number),
-      expect.closeTo(33.47, 2),
-      expect.any(Number),
+      0,
+      expect.closeTo(57.5349, 4),
+      expect.closeTo(33.4954, 4),
     );
-    expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
+    expect(camera.lookAt).toHaveBeenCalledWith(0, 3, 0);
+    expect(camera.rotateZ).toHaveBeenCalledWith(0);
   });
 
   it("does not clamp yaw when framing, so a full revolution renders", () => {
@@ -391,7 +411,7 @@ describe("keyboard scene capability and camera input", () => {
       expect.any(Number),
       horizontalDistance * Math.cos(3.5),
     );
-    expect(camera.lookAt).toHaveBeenCalledWith(0, 5, 0);
+    expect(camera.lookAt).toHaveBeenCalledWith(0, 3, 0);
   });
 
   it("applies the accumulated roll after framing the camera", () => {
@@ -421,19 +441,19 @@ describe("keyboard scene capability and camera input", () => {
 
     element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 });
     element.dispatch("pointermove", { clientX: 110, clientY: 50, pointerId: 1 });
-    expect(input.target.yaw).toBeCloseTo(0.04);
+    expect(input.target.yaw).toBeCloseTo(-0.04);
 
     element.losePointerCapture(1);
     element.dispatch("pointermove", { clientX: 190, clientY: 50, pointerId: 1 });
-    expect(input.target.yaw).toBeCloseTo(0.04);
+    expect(input.target.yaw).toBeCloseTo(-0.04);
 
     element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 2 });
     element.dispatch("pointermove", { clientX: 90, clientY: 50, pointerId: 2 });
-    expect(input.target.yaw).toBeCloseTo(0.08);
+    expect(input.target.yaw).toBeCloseTo(0);
 
     windowTarget.dispatch("blur", {});
     element.dispatch("pointermove", { clientX: 10, clientY: 50, pointerId: 2 });
-    expect(input.target.yaw).toBeCloseTo(0.08);
+    expect(input.target.yaw).toBeCloseTo(0);
 
     cleanup();
     expect(element.count("lostpointercapture")).toBe(0);
@@ -441,9 +461,9 @@ describe("keyboard scene capability and camera input", () => {
   });
 
   it("reports native camera event failures instead of leaking them past the Hero", () => {
-    const failure = new Error("bounds unavailable");
+    const failure = new Error("pointer capture unavailable");
     const element = new CameraEventTarget();
-    element.getBoundingClientRect = () => { throw failure; };
+    element.setPointerCapture = () => { throw failure; };
     const reportError = vi.fn();
     const cleanup = bindCameraInput(
       element as unknown as HTMLCanvasElement,
@@ -452,7 +472,7 @@ describe("keyboard scene capability and camera input", () => {
       new CameraEventTarget() as unknown as Window,
     );
 
-    expect(() => element.dispatch("pointermove", { clientX: 100, clientY: 50, pointerId: 1 })).not.toThrow();
+    expect(() => element.dispatch("pointerdown", { clientX: 100, clientY: 50, pointerId: 1 })).not.toThrow();
     expect(reportError).toHaveBeenCalledWith(failure);
     cleanup();
   });
@@ -468,7 +488,7 @@ describe("keyboard scene capability and camera input", () => {
     expect(() => applyCameraFrame(
       camera as never,
       createCameraInputState(),
-      { yaw: 0.08, pitch: 0.62, roll: 0, distance: 18 },
+      { yaw: 0, pitch: 1.02, roll: 0, distance: 64 },
       1 / 60,
       reportError,
     )).not.toThrow();

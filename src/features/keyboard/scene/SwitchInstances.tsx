@@ -1,9 +1,11 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { AssemblyPlan, KeyboardDefinition } from "../model/keyboard-types";
 import type { KeyRegistry } from "../interaction/key-registry";
 import { KEY_TRAVEL } from "../animation/key-animation";
+import type { SceneMotion } from "../animation/experience";
+import { FOCUSED_KEY, switchFlightOffset } from "../model/assembly-motion";
 
 const SWITCH_PARTS = [
   "upperhousing",
@@ -21,6 +23,8 @@ type SwitchInstancesProps = Readonly<{
   plan: AssemblyPlan;
   switchScene: THREE.Group;
   registry: KeyRegistry;
+  motion?: SceneMotion;
+  assemblyLift?: number;
 }>;
 
 function switchMesh(scene: THREE.Group, name: string): THREE.Mesh {
@@ -45,6 +49,8 @@ export function SwitchInstances({
   plan,
   switchScene,
   registry,
+  motion,
+  assemblyLift,
 }: SwitchInstancesProps) {
   return SWITCH_PARTS.map((name) => (
     <SwitchPartInstances
@@ -57,6 +63,8 @@ export function SwitchInstances({
       source={switchMesh(switchScene, name)}
       switchScene={switchScene}
       registry={registry}
+      motion={motion}
+      assemblyLift={assemblyLift}
     />
   ));
 }
@@ -75,12 +83,22 @@ function SwitchPartInstances({
   source,
   switchScene,
   registry,
+  motion,
+  assemblyLift = 0,
 }: SwitchPartInstancesProps) {
   const instance = useRef<THREE.InstancedMesh>(null);
   const baseMatrices = useRef<THREE.Matrix4[]>([]);
   const previousOffsets = useRef<number[]>([]);
+  const previousFlights = useRef<number[]>([]);
+  const previousHidden = useRef<boolean[]>([]);
   const scratch = useMemo(() => new THREE.Matrix4(), []);
   const morph = useMemo(() => new THREE.Mesh(source.geometry, source.material), [source]);
+  const material = useMemo(() => !motion ? source.material
+    : Array.isArray(source.material) ? source.material.map((entry) => entry.clone()) : source.material.clone(), [motion, source.material]);
+  const materialList = useMemo(() => Array.isArray(material) ? material : [material], [material]);
+  const opacities = useMemo(() => materialList.map((entry) => entry.opacity), [materialList]);
+  const depthWrites = useMemo(() => materialList.map((entry) => entry.depthWrite), [materialList]);
+  useEffect(() => () => { if (motion) materialList.forEach((entry) => entry.dispose()); }, [motion, materialList]);
 
   useLayoutEffect(() => {
     switchScene.updateMatrixWorld(true);
@@ -109,26 +127,43 @@ function SwitchPartInstances({
     });
     mesh.instanceMatrix.needsUpdate = true;
     previousOffsets.current = [];
+    previousFlights.current = [];
+    previousHidden.current = [];
     if (mesh.morphTexture) mesh.morphTexture.needsUpdate = true;
   }, [assemblyHeight, keyboardOffset, orientation, plan.keys, source, switchScene]);
 
   useFrame(() => {
     const mesh = instance.current;
-    if (!mesh || !["stem", "stem_magnet", "spring"].includes(name)) return;
+    if (!mesh) return;
+    const moving = name === "stem" || name === "stem_magnet" || name === "spring";
+    if (!motion && !moving) return;
+    if (motion) {
+      const fade = motion.reveal * (1 - motion.boardExit);
+      mesh.visible = fade > 0.001;
+      materialList.forEach((entry, index) => {
+        entry.opacity = opacities[index] * fade;
+        entry.transparent = entry.opacity < 1;
+        entry.depthWrite = fade >= 0.99 && depthWrites[index];
+      });
+    }
     let changed = false;
     plan.keys.forEach((key, index) => {
-      const offset = registry.getAnimation(key.modelKey).offsetY;
-      if (previousOffsets.current[index] === offset) return;
+      const offset = moving ? registry.getAnimation(key.modelKey).offsetY : 0;
+      const flight = motion ? motion.assembly * assemblyLift + switchFlightOffset(key.modelKey, key.random, motion.switchExit) : 0;
+      const hidden = Boolean(motion && motion.focus > 0 && key.modelKey === FOCUSED_KEY);
+      if (previousOffsets.current[index] === offset && previousFlights.current[index] === flight && previousHidden.current[index] === hidden) return;
       previousOffsets.current[index] = offset;
+      previousFlights.current[index] = flight;
+      previousHidden.current[index] = hidden;
       changed = true;
       if (name === "spring" && morph.morphTargetInfluences) {
         morph.morphTargetInfluences[0] = THREE.MathUtils.clamp(-offset / KEY_TRAVEL, 0, 1);
         mesh.setMorphAt(index, morph);
-      } else {
-        scratch.copy(baseMatrices.current[index]);
-        scratch.elements[13] += offset;
-        mesh.setMatrixAt(index, scratch);
       }
+      scratch.copy(baseMatrices.current[index]);
+      scratch.elements[13] += flight + (name === "stem" || name === "stem_magnet" ? offset : 0);
+      if (hidden) scratch.scale(new THREE.Vector3(0, 0, 0));
+      mesh.setMatrixAt(index, scratch);
     });
     if (changed) {
       mesh.instanceMatrix.needsUpdate = true;
@@ -139,8 +174,9 @@ function SwitchPartInstances({
   return (
     <instancedMesh
       ref={instance}
-      args={[source.geometry, source.material, plan.keys.length]}
+      args={[source.geometry, material, plan.keys.length]}
       name={`${name}Instances`}
+      frustumCulled={!motion}
     />
   );
 }

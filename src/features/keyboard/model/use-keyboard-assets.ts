@@ -4,6 +4,7 @@ import { SRGBColorSpace, TextureLoader } from "three";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { KEYCHRON_ASSET_ROOT } from "./asset-paths";
+import { keyboardLoadingManager, resetAssetProgress } from "./asset-progress";
 import { parseKeyboardData } from "./parse-keyboard-data";
 import type { KeyboardDefinition } from "./keyboard-types";
 
@@ -27,12 +28,18 @@ export async function loadKeyboardDefinition(
   relativeName: string,
   fetcher: DefinitionFetcher = fetch,
 ): Promise<KeyboardDefinition> {
+  const url = `${KEYCHRON_ASSET_ROOT}/${relativeName}`;
+  const manager = keyboardLoadingManager;
+  manager.itemStart(url);
   try {
-    const response = await fetcher(`${KEYCHRON_ASSET_ROOT}/${relativeName}`);
+    const response = await fetcher(url);
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     return parseKeyboardData(await response.json());
   } catch (cause) {
+    manager.itemError(url);
     throw new Error(`Failed to load ${relativeName}`, { cause });
+  } finally {
+    manager.itemEnd(url);
   }
 }
 
@@ -49,21 +56,27 @@ export function getKeyboardDefinition(
 }
 
 export function resetKeyboardAssetCaches(): void {
+  resetAssetProgress();
   definitionRequests.clear();
   useLoader.clear(GLTFLoader, GLB_URLS);
   useLoader.clear(TextureLoader, TEXTURE_URLS);
 }
 
 function configureLoader(loader: GLTFLoader): void {
-  const draco = new DRACOLoader();
+  loader.manager = keyboardLoadingManager;
+  const draco = new DRACOLoader(keyboardLoadingManager);
   draco.setDecoderPath(`${KEYCHRON_ASSET_ROOT}/models/common/draco/`);
   draco.setDecoderConfig({ type: "wasm" });
   loader.setDRACOLoader(draco);
 }
 
+function configureTextureLoader(loader: TextureLoader): void {
+  loader.manager = keyboardLoadingManager;
+}
+
 export function useKeyboardAssets() {
   const [keyboard, keycaps, switches, common] = useLoader(GLTFLoader, GLB_URLS, configureLoader);
-  const [legendAtlas, bumpMap] = useLoader(TextureLoader, TEXTURE_URLS);
+  const [legendAtlas, bumpMap] = useLoader(TextureLoader, TEXTURE_URLS, configureTextureLoader);
   const definition = use(getKeyboardDefinition(KEYBOARD_DEFINITION));
 
   legendAtlas.colorSpace = SRGBColorSpace;

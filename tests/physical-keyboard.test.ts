@@ -4,10 +4,20 @@ import { createPhysicalKeyboardHandlers } from "../src/features/keyboard/interac
 
 const effectState = vi.hoisted(() => ({
   cleanup: undefined as (() => void) | undefined,
+  dependencies: undefined as readonly unknown[] | undefined,
+  ref: undefined as { current: unknown } | undefined,
 }));
 
 vi.mock("react", () => ({
-  useEffect: (effect: () => void | (() => void)) => {
+  useRef: <T,>(initial: T) => {
+    effectState.ref ??= { current: initial };
+    return effectState.ref as { current: T };
+  },
+  useEffect: (effect: () => void | (() => void), dependencies: readonly unknown[]) => {
+    if (effectState.dependencies?.length === dependencies.length
+      && dependencies.every((dependency, index) => Object.is(dependency, effectState.dependencies![index]))) return;
+    effectState.cleanup?.();
+    effectState.dependencies = dependencies;
     effectState.cleanup = effect() ?? undefined;
   },
 }));
@@ -41,6 +51,8 @@ class ListenerTarget {
 afterEach(() => {
   effectState.cleanup?.();
   effectState.cleanup = undefined;
+  effectState.dependencies = undefined;
+  effectState.ref = undefined;
   vi.unstubAllGlobals();
 });
 
@@ -79,6 +91,55 @@ describe("physical keyboard", () => {
     expect(onTextInput).toHaveBeenNthCalledWith(1, { key: "a" });
     expect(onTextInput).toHaveBeenNthCalledWith(2, { key: "Backspace" });
     expect(onTextInput).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    { isComposing: true },
+    { ctrlKey: true },
+    { metaKey: true },
+    { altKey: true },
+  ])("animates composing or shortcut keys without appending text: %j", (modifiers) => {
+    const registry = new KeyRegistry();
+    const a = actuator();
+    const onTextInput = vi.fn();
+    registry.register("KeyA", a);
+    const handlers = createPhysicalKeyboardHandlers(registry, onTextInput);
+    handlers.keydown({ code: "KeyA", key: "a", repeat: false, target: null, ...modifiers });
+    handlers.keyup({ code: "KeyA", repeat: false, target: null });
+
+    expect(onTextInput).not.toHaveBeenCalled();
+    expect(a.press).toHaveBeenCalledOnce();
+    expect(a.release).toHaveBeenCalledOnce();
+    handlers.keydown({ code: "KeyA", key: "A", repeat: false, target: null });
+    expect(onTextInput).toHaveBeenCalledExactlyOnceWith({ key: "A" });
+  });
+
+  it("keeps simultaneous keys held while using the latest text callback after a render", () => {
+    const windowTarget = new ListenerTarget();
+    vi.stubGlobal("window", windowTarget);
+    vi.stubGlobal("document", Object.assign(new ListenerTarget(), { visibilityState: "visible" }));
+    const registry = new KeyRegistry();
+    const a = actuator(); const b = actuator();
+    registry.register("KeyA", a); registry.register("KeyB", b);
+    const initialText = vi.fn(); const updatedText = vi.fn();
+
+    usePhysicalKeyboard(registry, initialText);
+    windowTarget.dispatch("keydown", { code: "KeyA", key: "a", repeat: false, target: null });
+    usePhysicalKeyboard(registry, updatedText);
+    windowTarget.dispatch("keydown", { code: "KeyB", key: "b", repeat: false, target: null });
+    windowTarget.dispatch("keydown", { code: "KeyA", key: "a", repeat: true, target: null });
+
+    expect(initialText).toHaveBeenCalledExactlyOnceWith({ key: "a" });
+    expect(updatedText).toHaveBeenCalledExactlyOnceWith({ key: "b" });
+    expect(a.press).toHaveBeenCalledOnce();
+    expect(b.press).toHaveBeenCalledOnce();
+    expect(a.reset).not.toHaveBeenCalled();
+    expect(b.reset).not.toHaveBeenCalled();
+    expect(windowTarget.count("keydown")).toBe(1);
+    windowTarget.dispatch("keyup", { code: "KeyA", repeat: false, target: null });
+    windowTarget.dispatch("keyup", { code: "KeyB", repeat: false, target: null });
+    expect(a.release).toHaveBeenCalledOnce();
+    expect(b.release).toHaveBeenCalledOnce();
   });
 
   it("releases a mapped key on keyup even when it comes from an editable target", () => {

@@ -3,6 +3,7 @@ import { useLoader } from "@react-three/fiber";
 import { TextureLoader } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { KEYCHRON_ASSET_ROOT } from "../src/features/keyboard/model/asset-paths";
+import { getAssetProgress, keyboardLoadingManager } from "../src/features/keyboard/model/asset-progress";
 import { KeyboardDataError } from "../src/features/keyboard/model/parse-keyboard-data";
 import {
   getKeyboardDefinition,
@@ -27,6 +28,25 @@ afterEach(() => {
 });
 
 describe("keyboard definition loading errors", () => {
+  it("counts a validated definition once and leaves a cache hit without synthetic loading", async () => {
+    resetKeyboardAssetCaches();
+    keyboardLoadingManager.itemStart("pending-keyboard.glb");
+    await getKeyboardDefinition(definitionFile, async () => new Response(JSON.stringify(validDefinition)));
+    expect(getAssetProgress()).toBe(49);
+    await getKeyboardDefinition(definitionFile, async () => { throw new Error("cached definition was fetched again"); });
+    expect(getAssetProgress()).toBe(49);
+    keyboardLoadingManager.itemEnd("pending-keyboard.glb");
+    expect(getAssetProgress()).toBe(99);
+    resetKeyboardAssetCaches();
+    expect(getAssetProgress()).toBe(0);
+  });
+
+  it("does not report a failed JSON definition as completed progress", async () => {
+    resetKeyboardAssetCaches();
+    await expect(loadKeyboardDefinition(definitionFile, async () => new Response("{}"))).rejects.toThrow();
+    expect(getAssetProgress()).toBe(0);
+  });
+
   it("includes the relative asset name when the network request rejects", async () => {
     const networkError = new TypeError("offline");
 

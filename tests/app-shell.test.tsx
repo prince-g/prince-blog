@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { appRoutes } from "../src/app/router";
 
 type Attributes = Readonly<Record<string, string>>;
@@ -56,35 +56,42 @@ function expectSiteHeader(markup: string) {
   expectLink(navigation, "ABOUT", "/about");
 }
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("app shell", () => {
   it("keeps the skip link targeted at the main landmark", () => {
     expectSkipLinkAndMain(renderRoute("/"));
   });
 
-  it("keeps the shared header navigation semantic and correctly linked", () => {
-    expectSiteHeader(renderRoute("/"));
+  it("keeps the home stage clean while retaining semantic navigation on secondary pages", () => {
+    const home = renderRoute("/");
+    expect(home).not.toMatch(/<header\b/);
+    expect(home).not.toMatch(/<nav\b/);
+    expect(home).not.toContain("PRINCE / DIGITAL GARDEN");
+    expect(home).not.toContain("Ideas become interfaces.");
+    expect(home).not.toContain("PRESS ANY KEY");
+    expect(home).not.toContain("复位键盘视角");
+    expectSiteHeader(renderRoute("/work"));
   });
 
-  it("keeps the home heading, keyboard hero, text input and view reset as ordered main content", () => {
+  it("keeps an accessible heading and one keyboard scene with loading-gated text input", () => {
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
     const markup = renderRoute("/");
     const main = elementContent(markup, "main", { id: "main-content" });
 
-    expectTextElement(main, "h1", "Ideas become interfaces.");
-    expect(main).toMatch(new RegExp(openingTag("textarea", { "aria-label": "键盘输入内容" })));
-    expect(main).toMatch(new RegExp(openingTag("button", { "aria-label": "复位键盘视角", type: "button" })));
-    expect(main).toMatch(new RegExp(
-      `${openingTag("div", { class: "home-keyboard" })}\\s*${openingTag("div", { role: "status", "aria-live": "polite" })}`,
-    ));
-    expectTextElement(main, "p", "PRESS ANY KEY");
+    expect(elementContent(main, "h1", { class: "sr-only" })).toBe("Keychron K2 HE 交互体验");
+    const scene = elementContent(main, "section", { "aria-label": "Keychron K2 HE 交互式三维键盘", "data-experience-phase": "loading" });
+    expect(scene).toMatch(new RegExp(openingTag("div", { role: "progressbar", "aria-label": "加载键盘模型", "aria-valuemin": "0", "aria-valuemax": "100" })));
+    expect(scene).toMatch(new RegExp(openingTag("textarea", { "aria-label": "键盘输入内容", disabled: "", tabindex: "-1" })));
+    expect(elementContent(scene, "div", { class: "typing-viewport", "aria-hidden": "true" })).toContain("keyboard-text-input");
+    expect(scene).not.toContain('aria-label="进入磁轴展示"');
 
     const contentOrder = [
       elementStart(main, "a", { href: "#main-content" }),
-      elementStart(main, "header"),
       elementStart(main, "h1"),
-      elementStart(main, "textarea", { "aria-label": "键盘输入内容" }),
       elementStart(main, "div", { class: "home-keyboard" }),
-      elementStart(main, "button", { "aria-label": "复位键盘视角" }),
-      elementStart(main, "p", { class: "key-prompt" }),
+      elementStart(main, "div", { role: "progressbar" }),
+      elementStart(main, "textarea", { "aria-label": "键盘输入内容" }),
     ];
     expect(contentOrder).toEqual([...contentOrder].sort((first, second) => first - second));
   });

@@ -27,7 +27,7 @@ export function KeyboardHeroState(props: KeyboardHeroStateProps) {
   }
 
   return (
-    <div role={props.state === "error" ? "alert" : "status"} aria-live="polite">
+    <div className="keyboard-fallback" role={props.state === "error" ? "alert" : "status"} aria-live="polite">
       <img src={THUMBNAIL_URL} alt="Keychron K2 HE 键盘产品预览" />
       <p>KEYCHRON K2 HE</p>
       <h2>{title}</h2>

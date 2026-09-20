@@ -7,6 +7,10 @@ import { buildAssemblyPlan } from "../src/features/keyboard/model/build-assembly
 import { parseKeyboardData } from "../src/features/keyboard/model/parse-keyboard-data";
 import { SwitchInstances } from "../src/features/keyboard/scene/SwitchInstances";
 import { KeyRegistry } from "../src/features/keyboard/interaction/key-registry";
+import type { SceneMotion } from "../src/features/keyboard/animation/experience";
+import { FocusedSwitch } from "../src/features/keyboard/scene/FocusedSwitch";
+import { KeycapMesh } from "../src/features/keyboard/scene/KeycapMesh";
+import { createKeyAnimationState, stepKeyAnimation } from "../src/features/keyboard/animation/key-animation";
 
 const switchPartNames = [
   "upperhousing",
@@ -60,14 +64,15 @@ function instanceMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
   return scene.children.filter((child): child is THREE.InstancedMesh => child instanceof THREE.InstancedMesh);
 }
 
-async function mountSwitches(switchScene = createSwitchScene()) {
+async function mountSwitches(switchScene = createSwitchScene(), motion?: SceneMotion, includeFocus = false) {
   const root = createRoot({} as HTMLCanvasElement);
   await root.configure({
     frameloop: "never",
     gl: createRenderer() as never,
     size: { width: 1440, height: 900, top: 0, left: 0 },
   });
-  const plan = buildAssemblyPlan(parseKeyboardData(keyboardData));
+  const definition = parseKeyboardData(keyboardData);
+  const plan = buildAssemblyPlan(definition);
   const registry = new KeyRegistry();
   let store: ReturnType<typeof root.render>;
 
@@ -81,6 +86,16 @@ async function mountSwitches(switchScene = createSwitchScene()) {
         plan,
         registry,
         switchScene,
+        motion,
+      }),
+      includeFocus && motion && createElement(FocusedSwitch, {
+        motion, registry, switchScene, orientation: "north", position: new THREE.Vector3(0.472, 2.13, 1.19),
+      }),
+      includeFocus && motion && createElement(KeycapMesh, {
+        motion, registry, keycap: plan.keys.find((key) => key.modelKey === "KeyJ")!,
+        assemblyHeight: 3.08, atlasTransform: definition.keycapUVOffsetScale, keyboardOffset: [0, 0, 0],
+        bumpMap: new THREE.Texture(), legendAtlas: new THREE.Texture(), palette: definition.colorSet.primaryColor,
+        source: new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial()),
       }),
     ));
     await Promise.resolve();
@@ -92,6 +107,8 @@ async function mountSwitches(switchScene = createSwitchScene()) {
     registry,
     frame: () => store!.getState().advance(1, true),
     switchScene,
+    scene: store!.getState().scene,
+    subscribers: store!.getState().internal.subscribers,
     async unmount() {
       await act(async () => {
         root.unmount();
@@ -109,6 +126,55 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("SwitchInstances", () => {
+  it("keeps the focused switch in world space and advances a clicked J stroke exactly once", async () => {
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 1, switchExit: 1, focus: 1, boardExit: 1 };
+    const mounted = await mountSwitches(createSwitchScene(), motion, true);
+    try {
+      const focused = mounted.scene.getObjectByName("focusedSwitch") as THREE.Group & { __r3f: { handlers: Record<string, () => void> } };
+      focused.__r3f.handlers.onPointerDown();
+      const expected = createKeyAnimationState();
+      expected.pressed = true;
+      expected.holdRemaining = 0.035;
+      stepKeyAnimation(expected, 1 / 60);
+      // Run the actual registered render callbacks with one known frame delta.
+      for (const subscriber of mounted.subscribers) subscriber.ref.current({} as never, 1 / 60, undefined);
+      expect(focused.position.toArray()).toEqual([0, 12.5, 0]);
+      expect(focused.visible).toBe(true);
+      expect(mounted.registry.getAnimation("KeyJ").offsetY).toBeCloseTo(expected.offsetY, 9);
+      expect(focused.getObjectByName("stem")!.position.y).toBeCloseTo(expected.offsetY, 9);
+      focused.__r3f.handlers.onPointerOut();
+      expect(mounted.registry.getAnimation("KeyJ").pressed).toBe(false);
+    } finally { await mounted.unmount(); }
+  });
+  it("flies every component out while retaining J until its focused replacement appears", async () => {
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const mounted = await mountSwitches(createSwitchScene(), motion);
+    try {
+      mounted.frame();
+      const j = mounted.plan.keys.findIndex((key) => key.modelKey === "KeyJ");
+      const a = mounted.plan.keys.findIndex((key) => key.modelKey === "KeyA");
+      motion.switchExit = 1;
+      mounted.frame();
+      for (const instance of mounted.instances) {
+        const matrix = new THREE.Matrix4();
+        instance.getMatrixAt(a, matrix);
+        expect(matrix.elements[13]).toBeGreaterThanOrEqual(50);
+        instance.getMatrixAt(j, matrix);
+        expect(matrix.elements[13]).toBe(0);
+      }
+      motion.focus = 0.1;
+      mounted.frame();
+      for (const instance of mounted.instances) {
+        const matrix = new THREE.Matrix4();
+        instance.getMatrixAt(j, matrix);
+        expect(matrix.determinant()).toBe(0);
+      }
+      motion.reveal = 0.25;
+      mounted.frame();
+      expect((mounted.instances[0].material as THREE.Material).opacity).toBe(0.25);
+      expect(((mounted.switchScene.children[0] as THREE.Mesh).material as THREE.Material).opacity).toBe(1);
+    } finally { await mounted.unmount(); }
+  });
   it("moves only the matching stem and compresses its spring with shared key travel", async () => {
     const mounted = await mountSwitches();
     try {

@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import type { ExperiencePhase, SceneMotion } from "../animation/experience";
 
 type CameraTarget = { yaw: number; pitch: number; roll: number; distance: number };
 type CameraParallax = { yaw: number; pitch: number };
@@ -14,10 +15,9 @@ export type CameraErrorReporter = (cause: unknown) => void;
 
 type WindowEventTarget = Pick<Window, "addEventListener" | "removeEventListener">;
 
-const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0.08, pitch: 0.62, roll: 0, distance: 49 };
-const DISTANCE_RANGE = [38, 62] as const;
-const CAMERA_FOCUS_Y = 5;
-const PARALLAX_LIMIT = 0.025;
+const DEFAULT_TARGET: Readonly<CameraTarget> = { yaw: 0, pitch: 1.02, roll: 0, distance: 64 };
+const DISTANCE_RANGE = [44, 92] as const;
+const CAMERA_FOCUS_Y = 3;
 const DRAG_RADIANS_PER_PIXEL = 0.004;
 const WHEEL_DISTANCE_PER_PIXEL = 0.008;
 
@@ -30,7 +30,7 @@ export const INITIAL_CAMERA_POSITION = [
 export function fitKeyboardCamera(camera: THREE.Camera, width: number, height: number): void {
   if (!(camera instanceof THREE.PerspectiveCamera) || width <= 0 || height <= 0) return;
   // Keep the full board visible in portrait without changing the orbit or scroll distance.
-  camera.zoom = Math.min(1, width / height / 1.35);
+  camera.zoom = Math.min(1, width / height / 1.15);
   camera.updateProjectionMatrix();
 }
 
@@ -72,12 +72,6 @@ export function bindCameraInput(
     element.setPointerCapture(event.pointerId);
   };
   const pointermove = (event: PointerEvent) => {
-    const bounds = element.getBoundingClientRect();
-    const normalizedX = bounds.width ? ((event.clientX - bounds.left) / bounds.width) * 2 - 1 : 0;
-    const normalizedY = bounds.height ? 1 - ((event.clientY - bounds.top) / bounds.height) * 2 : 0;
-    input.parallax.yaw = clamp(normalizedX, [-1, 1]) * PARALLAX_LIMIT;
-    input.parallax.pitch = clamp(normalizedY, [-1, 1]) * PARALLAX_LIMIT;
-
     if (!activePointer || activePointer.id !== event.pointerId) return;
     const deltaX = event.clientX - activePointer.x;
     const deltaY = event.clientY - activePointer.y;
@@ -156,6 +150,7 @@ export function applyCameraFrame(
   current: CameraTarget,
   delta: number,
   onError: CameraErrorReporter,
+  motion?: SceneMotion,
 ): void {
   try {
     const yaw = controls.target.yaw + controls.parallax.yaw;
@@ -165,13 +160,19 @@ export function applyCameraFrame(
     current.roll = THREE.MathUtils.damp(current.roll, controls.target.roll, 8, delta);
     current.distance = THREE.MathUtils.damp(current.distance, controls.target.distance, 8, delta);
 
-    const horizontalDistance = current.distance * Math.cos(current.pitch);
+    const assembly = motion?.assembly ?? 0;
+    const focus = motion?.focus ?? 0;
+    const viewYaw = THREE.MathUtils.lerp(current.yaw, 0.62, assembly);
+    const viewPitch = THREE.MathUtils.lerp(current.pitch - focus * 0.47, 0.68, assembly);
+    const distance = THREE.MathUtils.lerp(current.distance * (1 - focus * (1 - 10 / 64)), 95, assembly);
+    const focusY = THREE.MathUtils.lerp(THREE.MathUtils.lerp(CAMERA_FOCUS_Y, 12.6, focus), 14, assembly);
+    const horizontalDistance = distance * Math.cos(viewPitch);
     camera.position.set(
-      horizontalDistance * Math.sin(current.yaw),
-      CAMERA_FOCUS_Y + current.distance * Math.sin(current.pitch),
-      horizontalDistance * Math.cos(current.yaw),
+      horizontalDistance * Math.sin(viewYaw),
+      focusY + distance * Math.sin(viewPitch),
+      horizontalDistance * Math.cos(viewYaw),
     );
-    camera.lookAt(0, CAMERA_FOCUS_Y, 0);
+    camera.lookAt(0, focusY, 0);
     camera.rotateZ?.(current.roll);
   } catch (cause) {
     onError(cause);
@@ -181,9 +182,11 @@ export function applyCameraFrame(
 type CameraRigProps = Readonly<{
   onError: CameraErrorReporter;
   resetRequest?: number;
+  phase?: ExperiencePhase;
+  motion?: SceneMotion;
 }>;
 
-export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
+export function CameraRig({ onError, resetRequest = 0, phase = "ready", motion }: CameraRigProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
   const size = useThree((state) => state.size);
@@ -198,7 +201,14 @@ export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
     onError(cause);
   }, [onError]);
 
-  useEffect(() => bindCameraInput(canvas, input.current!, reportError), [canvas, reportError]);
+  useEffect(() => {
+    if (phase !== "ready" && phase !== "switch") return;
+    return bindCameraInput(canvas, input.current!, reportError);
+  }, [canvas, phase, reportError]);
+
+  useEffect(() => {
+    if (phase === "exiting") resetInput(input.current!);
+  }, [phase]);
 
   useLayoutEffect(() => {
     fitKeyboardCamera(camera, size.width, size.height);
@@ -210,8 +220,12 @@ export function CameraRig({ onError, resetRequest = 0 }: CameraRigProps) {
   }, [resetRequest]);
 
   useFrame((_, delta) => {
-    applyCameraFrame(camera, input.current!, current.current, delta, reportError);
-  });
+    applyCameraFrame(camera, input.current!, current.current, delta, reportError, motion);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const zoom = THREE.MathUtils.lerp(Math.min(1, size.width / size.height / 1.15), Math.min(1, size.width / size.height / 0.85), motion?.focus ?? 0);
+      if (camera.zoom !== zoom) { camera.zoom = zoom; camera.updateProjectionMatrix(); }
+    }
+  }, -0.5);
 
   return null;
 }

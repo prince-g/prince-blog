@@ -2,7 +2,7 @@ import { MODEL_KEY_BY_CODE } from "../data/keyboard-key-map";
 import { type KeyRegistry } from "./key-registry";
 
 type KeyboardEventData = Pick<KeyboardEvent, "code" | "repeat" | "target">
-  & Partial<Pick<KeyboardEvent, "key">>;
+  & Partial<Pick<KeyboardEvent, "key" | "isComposing" | "ctrlKey" | "metaKey" | "altKey">>;
 type DocumentVisibility = Pick<Document, "visibilityState">;
 
 export type KeyboardTextInputHandler = (event: Pick<KeyboardEvent, "key">) => void;
@@ -27,7 +27,7 @@ export function createPhysicalKeyboardHandlers(
   return {
     keydown(event: KeyboardEventData) {
       if (event.repeat) return;
-      if (!isEditableTarget(event.target)) onTextInput?.({ key: event.key ?? "" });
+      if (!isEditableTarget(event.target) && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey) onTextInput?.({ key: event.key ?? "" });
       const modelKey = modelKeyFor(event.code);
       if (modelKey) registry.press(modelKey);
     },
