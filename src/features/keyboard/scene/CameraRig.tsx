@@ -164,7 +164,7 @@ export function applyCameraFrame(
     const focus = motion?.focus ?? 0;
     const viewYaw = THREE.MathUtils.lerp(current.yaw, 0.62, assembly);
     const viewPitch = THREE.MathUtils.lerp(current.pitch - focus * 0.47, 0.68, assembly);
-    const distance = THREE.MathUtils.lerp(current.distance * (1 - focus * (1 - 10 / 64)), 95, assembly);
+    const distance = THREE.MathUtils.lerp(current.distance * (1 - focus * (1 - 18 / 64)), 95, assembly);
     const focusY = THREE.MathUtils.lerp(THREE.MathUtils.lerp(CAMERA_FOCUS_Y, 12.6, focus), 14, assembly);
     const horizontalDistance = distance * Math.cos(viewPitch);
     camera.position.set(
@@ -207,7 +207,7 @@ export function CameraRig({ onError, resetRequest = 0, phase = "ready", motion }
   }, [canvas, phase, reportError]);
 
   useEffect(() => {
-    if (phase === "exiting") resetInput(input.current!);
+    if (phase === "exiting" || phase === "returning") resetInput(input.current!);
   }, [phase]);
 
   useLayoutEffect(() => {

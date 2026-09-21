@@ -10,7 +10,7 @@ import { useKeyboardAssets } from "../model/use-keyboard-assets";
 import { CameraRig, type CameraErrorReporter } from "./CameraRig";
 import { KeyboardModel } from "./KeyboardModel";
 import { keyboardLoadingManager } from "../model/asset-progress";
-import { assemblyTimeline, exitTimeline } from "../animation/experience";
+import { assemblyTimeline, exitTimeline, returnTimeline, type SceneMotion } from "../animation/experience";
 import type { SceneExperience } from "./experience-props";
 import { TypingPanelProjection } from "./TypingPanelProjection";
 
@@ -50,13 +50,33 @@ function ReadySignal({ onReady, onRuntimeError }: Pick<KeyboardSceneProps, "onRe
 }
 
 function ExperienceDirector({ experience }: { experience: SceneExperience }) {
-  const { phase, motion, onAssembled, onSwitch } = experience;
+  const { phase, motion, onAssembled, onSwitch, onReturned, backdrop } = experience;
+  const timeline = useRef<gsap.core.Timeline | null>(null);
   useGSAP(() => {
+    // Kill the finished owner without reverting shared values at phase boundaries.
+    timeline.current?.kill();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (phase === "assembling") assemblyTimeline(motion, onAssembled, reduced);
-    if (phase === "exiting") exitTimeline(motion, onSwitch, reduced);
+    if (phase === "assembling") timeline.current = assemblyTimeline(motion, onAssembled, reduced);
+    if (phase === "exiting") timeline.current = exitTimeline(motion, onSwitch, reduced);
+    if (phase === "returning") timeline.current = returnTimeline(motion, onReturned, reduced);
   }, { dependencies: [phase] });
+  useFrame(() => {
+    if (backdrop.current) backdrop.current.style.opacity = String(THREE.MathUtils.smoothstep(motion.focus, 0.3, 1) * (1 - motion.assembly));
+  });
   return null;
+}
+
+function KeyboardGround({ motion }: { motion?: SceneMotion }) {
+  const material = useRef<THREE.ShadowMaterial>(null);
+  useFrame(() => {
+    if (material.current) material.current.opacity = 0.16 * (motion
+      ? motion.reveal * (1 - motion.assembly) * (1 - motion.boardExit) * (1 - THREE.MathUtils.smoothstep(motion.switchExit, 0, 0.2))
+      : 1);
+  });
+  return <mesh position={[0, -0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+    <planeGeometry args={[200, 200]} />
+    <shadowMaterial ref={material} transparent opacity={0.16} />
+  </mesh>;
 }
 
 export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError, experience }: KeyboardSceneProps) {
@@ -120,12 +140,9 @@ export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError,
       />
       <hemisphereLight color="#ffffff" groundColor="#dad2c5" intensity={0.35} />
       <group ref={product}>
-        <KeyboardModel plan={plan} registry={registry} motion={experience?.motion} />
+        <KeyboardModel plan={plan} registry={registry} motion={experience?.motion} phase={experience?.phase} autoRotate={experience?.autoRotate} />
       </group>
-      <mesh position={[0, -0.62, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow visible={experience?.phase !== "switch"}>
-        <planeGeometry args={[200, 200]} />
-        <shadowMaterial transparent opacity={0.16} />
-      </mesh>
+      <KeyboardGround motion={experience?.motion} />
       <CameraRig onError={onRuntimeError} resetRequest={resetRequest} phase={experience?.phase} motion={experience?.motion} />
       {experience && <>
         <ExperienceDirector experience={experience} />

@@ -171,8 +171,50 @@ describe("SwitchInstances", () => {
       }
       motion.reveal = 0.25;
       mounted.frame();
-      expect((mounted.instances[0].material as THREE.Material).opacity).toBe(0.25);
+      const material = mounted.instances[0].material as THREE.Material;
+      const shader = { ...THREE.ShaderLib.standard, uniforms: { ...THREE.ShaderLib.standard.uniforms } } as Parameters<THREE.Material["onBeforeCompile"]>[0];
+      material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+      expect(material.opacity).toBe(1);
+      expect(shader.uniforms.dissolveProgress.value).toBe(0.75);
       expect(((mounted.switchScene.children[0] as THREE.Mesh).material as THREE.Material).opacity).toBe(1);
+      // Reversing the same motion restores the original J instance and all neighboring origins.
+      motion.focus = 0; motion.switchExit = 0; motion.reveal = 1;
+      mounted.frame();
+      for (const instance of mounted.instances) {
+        const matrix = new THREE.Matrix4();
+        instance.getMatrixAt(j, matrix);
+        expect(matrix.determinant()).toBeCloseTo(1);
+        instance.getMatrixAt(a, matrix);
+        expect(matrix.elements[13]).toBe(0);
+      }
+      expect(shader.uniforms.dissolveProgress.value).toBe(0);
+    } finally { await mounted.unmount(); }
+  });
+  it("dissolves keycap surfaces and their shadows without making their shells translucent", async () => {
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const mounted = await mountSwitches(createSwitchScene(), motion, true);
+    try {
+      mounted.frame();
+      const cap = mounted.scene.getObjectByName("KeyJ") as THREE.Mesh;
+      const initialY = cap.position.y;
+      const shader = { ...THREE.ShaderLib.standard, uniforms: { ...THREE.ShaderLib.standard.uniforms } } as Parameters<THREE.Material["onBeforeCompile"]>[0];
+      (cap.material as THREE.Material).onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+      motion.capExit = 0.6;
+      mounted.frame();
+      expect((cap.material as THREE.Material).transparent).toBe(false);
+      expect((cap.material as THREE.Material).depthWrite).toBe(true);
+      expect((cap.material as THREE.Material).opacity).toBe(1);
+      expect(shader.uniforms.dissolveProgress.value).toBeCloseTo(0.6);
+      expect(cap.customDepthMaterial).toBeInstanceOf(THREE.MeshDepthMaterial);
+      expect(cap.position.y - initialY).toBeLessThan(0.5);
+      motion.capExit = 1;
+      mounted.frame();
+      expect(cap.visible).toBe(false);
+      motion.capExit = 0;
+      mounted.frame();
+      expect(cap.visible).toBe(true);
+      expect(cap.position.y).toBe(initialY);
+      expect(shader.uniforms.dissolveProgress.value).toBe(0);
     } finally { await mounted.unmount(); }
   });
   it("moves only the matching stem and compresses its spring with shared key travel", async () => {

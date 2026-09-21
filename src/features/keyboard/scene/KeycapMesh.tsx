@@ -7,6 +7,7 @@ import type { KeyRegistry } from "../interaction/key-registry";
 import { createKeycapMaterial } from "../model/keycap-material";
 import type { AssemblyKey, KeycapPalette } from "../model/keyboard-types";
 import { FOCUSED_KEY } from "../model/assembly-motion";
+import { createDissolveEffect } from "../model/dissolve-material";
 
 type KeycapMeshProps = Readonly<{
   assemblyHeight?: number;
@@ -26,11 +27,14 @@ export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboa
   const mesh = useRef<THREE.Mesh>(null);
   const animation = registry.getAnimation(keycap.modelKey);
   const baseY = keyboardOffset[1] + keycap.position.y + assemblyHeight;
-  const material = useMemo(
-    () => createKeycapMaterial(keycap, palette, legendAtlas, bumpMap, atlasTransform),
+  const { material, dissolve } = useMemo(
+    () => {
+      const material = createKeycapMaterial(keycap, palette, legendAtlas, bumpMap, atlasTransform);
+      return { material, dissolve: createDissolveEffect(material, true) };
+    },
     [keycap, palette, legendAtlas, bumpMap, atlasTransform],
   );
-  useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => { material.dispose(); dissolve.depthMaterial.dispose(); }, [material, dissolve]);
   useEffect(() => registry.register(keycap.modelKey, {
     reset: () => { if (mesh.current) mesh.current.position.y = baseY; },
   }), [baseY, keycap.modelKey, registry]);
@@ -39,13 +43,11 @@ export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboa
     // The detached J switch becomes the sole animation owner during focus.
     if (!(motion && motion.focus > 0 && keycap.modelKey === FOCUSED_KEY)) stepKeyAnimation(animation, delta);
     if (mesh.current) {
-      mesh.current.position.y = baseY + animation.offsetY + (motion ? motion.assembly * assemblyLift + motion.capExit * 3 : 0);
+      mesh.current.position.y = baseY + animation.offsetY + (motion ? motion.assembly * assemblyLift + motion.capExit * 0.65 : 0);
       if (motion) {
-        const opacity = motion.reveal * (1 - motion.capExit) * (1 - motion.boardExit);
-        mesh.current.visible = opacity > 0.001;
-        material.transparent = opacity < 1;
-        material.opacity = opacity;
-        material.depthWrite = opacity >= 0.99;
+        const visibility = motion.reveal * (1 - motion.capExit) * (1 - motion.boardExit);
+        mesh.current.visible = visibility > 0.001;
+        dissolve.progress.value = 1 - visibility;
       }
     }
   }, -2);
@@ -55,6 +57,7 @@ export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboa
     name={keycap.modelKey}
     geometry={source.geometry}
     material={material}
+    customDepthMaterial={dissolve.depthMaterial}
     position={[keyboardOffset[0] + keycap.position.x, baseY, keyboardOffset[2] + keycap.position.z]}
     castShadow
     receiveShadow

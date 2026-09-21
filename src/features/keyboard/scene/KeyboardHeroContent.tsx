@@ -61,14 +61,18 @@ type KeyboardHeroContentProps = Readonly<{
   onEnter: (source: "button" | "keyboard") => void;
   onSwitch: () => void;
   onBack: () => void;
+  onReturned: () => void;
+  autoRotate: boolean;
+  onToggleAutoRotate: () => void;
 }>;
 
 export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRuntimeError, onTextInput, resetRequest,
-  motion, typedText, onTextChange, onAssembled, onEnter, onSwitch, onBack }: KeyboardHeroContentProps) {
+  motion, typedText, onTextChange, onAssembled, onEnter, onSwitch, onBack, onReturned, autoRotate, onToggleAutoRotate }: KeyboardHeroContentProps) {
   const viewport = useRef<HTMLDivElement>(null);
   const cameraLayer = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
+  const backdrop = useRef<HTMLDivElement>(null);
   const progress = useAssetProgress();
   const phase = state.status;
   useEffect(() => {
@@ -80,9 +84,12 @@ export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRunti
 
   return <section aria-label={phase === "switch" ? "磁轴交互展示" : "Keychron K2 HE 交互式三维键盘"} data-experience-phase={phase}>
     <KeyboardErrorBoundary key={state.canvasKey} onError={onRuntimeError} onRetry={onRetry}>
+      <div className="switch-backdrop" ref={backdrop} aria-hidden="true">
+        <img src="/images/switch-fresco/creation-hands.webp" alt="" draggable={false} />
+      </div>
       <KeyboardCanvas key={state.canvasKey} attempt={state.canvasKey} registry={registry} resetRequest={resetRequest}
         onReady={onReady} onRuntimeError={onRuntimeError}
-        experience={{ phase, motion, onAssembled, onSwitch, textPanel: { viewport, cameraLayer, panel } }} />
+        experience={{ phase, motion, onAssembled, onSwitch, onReturned, autoRotate, backdrop, textPanel: { viewport, cameraLayer, panel } }} />
       {(phase === "loading" || phase === "assembling") && <div className={`keyboard-loader${phase === "assembling" ? " is-complete" : ""}`}
         role="progressbar" aria-label="加载键盘模型" aria-valuemin={0} aria-valuemax={100} aria-valuenow={phase === "loading" ? progress : 100}>
         <span>{String(phase === "loading" ? progress : 100).padStart(3, "0")}</span>
@@ -108,7 +115,14 @@ export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRunti
       {phase === "switch" && <>
         <SwitchKeyboardBinding registry={registry} />
         <button className="back-button" type="button" onClick={onBack} aria-label="返回键盘"><span aria-hidden="true">←</span> 返回键盘</button>
-        <p className="switch-hint">拖动旋转 · 点击或空格按压</p>
+        <div className="switch-controls">
+          <p className="switch-hint">拖动查看 · 点击或空格按压</p>
+          <button className="spin-button" type="button" onClick={onToggleAutoRotate} aria-label={autoRotate ? "暂停自转" : "继续自转"} title={autoRotate ? "暂停自转" : "继续自转"}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              {autoRotate ? <path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="2" /> : <path d="m8 5 11 7-11 7Z" fill="currentColor" />}
+            </svg>
+          </button>
+        </div>
       </>}
     </KeyboardErrorBoundary>
   </section>;

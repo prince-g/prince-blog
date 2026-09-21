@@ -20,7 +20,7 @@ export type KeyboardHeroRuntimeState = Readonly<{
   canvasKey: number;
 }>;
 
-type KeyboardHeroRuntimeEvent = "ready" | "assembled" | "enter" | "switch" | "back" | "error" | "retry";
+type KeyboardHeroRuntimeEvent = "ready" | "assembled" | "enter" | "switch" | "back" | "returned" | "error" | "retry";
 
 export const initialKeyboardHeroRuntimeState: KeyboardHeroRuntimeState = {
   status: "loading",
@@ -36,7 +36,7 @@ export function updateKeyboardHeroRuntimeState(
   }
   if (event === "error") return { ...state, status: "error" };
   if (event === "retry") return { status: "loading", canvasKey: state.canvasKey + 1 };
-  const transitions = { assembled: ["assembling", "ready"], enter: ["ready", "exiting"], switch: ["exiting", "switch"], back: ["switch", "ready"] } as const;
+  const transitions = { assembled: ["assembling", "ready"], enter: ["ready", "exiting"], switch: ["exiting", "switch"], back: ["switch", "returning"], returned: ["returning", "ready"] } as const;
   const [from, to] = transitions[event];
   return state.status === from ? { ...state, status: to } : state;
 }
@@ -139,7 +139,7 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
   const [probeWebGL] = useState(() => createWebGLCapabilityProbe());
   const [motion] = useState(createSceneMotion);
   const [typedText, setTypedText] = useState("");
-  const [localReset, setLocalReset] = useState(0);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   const enter = useCallback((source: "button" | "keyboard") => {
     if (orchestration.state.status === "error" || !canEnterSwitch(orchestration.state.status, typedText, source)) return;
@@ -156,10 +156,11 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
   const back = useCallback(() => {
     if (!orchestration.transition("back")) return;
     registry.releaseAll();
-    Object.assign(motion, createSceneMotion(), { assembly: 0, reveal: 1 });
-    setLocalReset((value) => value + 1);
     rerender();
-  }, [motion, orchestration, registry]);
+  }, [orchestration, registry]);
+  const returned = useCallback(() => {
+    if (orchestration.transition("returned")) rerender();
+  }, [orchestration]);
   const appendText = useCallback(({ key }: Pick<KeyboardEvent, "key">) => {
     onTextInput?.({ key });
     if (key === "Enter") { enter("keyboard"); return; }
@@ -189,7 +190,7 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
       onRetry={retry}
       onRuntimeError={handleRuntimeError}
       onTextInput={appendText}
-      resetRequest={(resetRequest ?? 0) + localReset}
+      resetRequest={resetRequest}
       motion={motion}
       typedText={typedText}
       onTextChange={setTypedText}
@@ -197,6 +198,9 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
       onEnter={enter}
       onSwitch={showSwitch}
       onBack={back}
+      onReturned={returned}
+      autoRotate={autoRotate}
+      onToggleAutoRotate={() => setAutoRotate((value) => !value)}
     />
   );
 }

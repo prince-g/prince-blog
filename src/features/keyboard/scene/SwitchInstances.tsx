@@ -6,6 +6,7 @@ import type { KeyRegistry } from "../interaction/key-registry";
 import { KEY_TRAVEL } from "../animation/key-animation";
 import type { SceneMotion } from "../animation/experience";
 import { FOCUSED_KEY, switchFlightOffset } from "../model/assembly-motion";
+import { createDissolveEffect } from "../model/dissolve-material";
 
 const SWITCH_PARTS = [
   "upperhousing",
@@ -93,12 +94,16 @@ function SwitchPartInstances({
   const previousHidden = useRef<boolean[]>([]);
   const scratch = useMemo(() => new THREE.Matrix4(), []);
   const morph = useMemo(() => new THREE.Mesh(source.geometry, source.material), [source]);
-  const material = useMemo(() => !motion ? source.material
-    : Array.isArray(source.material) ? source.material.map((entry) => entry.clone()) : source.material.clone(), [motion, source.material]);
-  const materialList = useMemo(() => Array.isArray(material) ? material : [material], [material]);
-  const opacities = useMemo(() => materialList.map((entry) => entry.opacity), [materialList]);
-  const depthWrites = useMemo(() => materialList.map((entry) => entry.depthWrite), [materialList]);
-  useEffect(() => () => { if (motion) materialList.forEach((entry) => entry.dispose()); }, [motion, materialList]);
+  const { material, materialList, dissolves } = useMemo(() => {
+    const material = !motion ? source.material
+      : Array.isArray(source.material) ? source.material.map((entry) => entry.clone()) : source.material.clone();
+    const materialList = Array.isArray(material) ? material : [material];
+    return { material, materialList, dissolves: motion ? materialList.map((entry) => createDissolveEffect(entry)) : [] };
+  }, [motion, source.material]);
+  useEffect(() => () => {
+    if (motion) materialList.forEach((entry) => entry.dispose());
+    dissolves.forEach((entry) => entry.depthMaterial.dispose());
+  }, [motion, materialList, dissolves]);
 
   useLayoutEffect(() => {
     switchScene.updateMatrixWorld(true);
@@ -140,11 +145,7 @@ function SwitchPartInstances({
     if (motion) {
       const fade = motion.reveal * (1 - motion.boardExit);
       mesh.visible = fade > 0.001;
-      materialList.forEach((entry, index) => {
-        entry.opacity = opacities[index] * fade;
-        entry.transparent = entry.opacity < 1;
-        entry.depthWrite = fade >= 0.99 && depthWrites[index];
-      });
+      dissolves.forEach((entry) => { entry.progress.value = 1 - fade; });
     }
     let changed = false;
     plan.keys.forEach((key, index) => {
@@ -175,6 +176,7 @@ function SwitchPartInstances({
     <instancedMesh
       ref={instance}
       args={[source.geometry, material, plan.keys.length]}
+      customDepthMaterial={dissolves[0]?.depthMaterial}
       name={`${name}Instances`}
       frustumCulled={!motion}
     />

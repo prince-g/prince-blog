@@ -28,6 +28,25 @@
 .home-keyboard > section { position: relative; width: 100%; height: 100%; }
 .home-keyboard canvas { display: block; touch-action: none; }
 
+.switch-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #f3eee5;
+  opacity: 0;
+  pointer-events: none;
+}
+.switch-backdrop img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* Align the painted fingertip gap with the 3D camera focus at every aspect ratio. */
+  width: max(106%, 190svh);
+  max-width: none;
+  height: auto;
+  transform: translate(-48.4%, -47.6%);
+}
+
 .typing-viewport, .typing-camera { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: none; }
 .typing-viewport { z-index: 2; visibility: hidden; }
 .typing-panel {
@@ -84,7 +103,7 @@
 .keyboard-loader.is-complete { animation: loading-away 0.45s ease 0.3s forwards; pointer-events: none; }
 @keyframes loading-away { to { opacity: 0; visibility: hidden; } }
 
-.start-button, .back-button {
+.start-button, .back-button, .spin-button {
   position: absolute;
   z-index: 4;
   bottom: clamp(20px, 3.2vh, 34px);
@@ -105,9 +124,12 @@
 }
 .start-button { right: clamp(20px, 2.6vw, 50px); }
 .back-button { left: clamp(20px, 2.6vw, 50px); }
-.start-button:hover, .back-button:hover { background: #eeeef0; transform: translateY(-2px); }
+.start-button:hover, .back-button:hover, .spin-button:hover { background: #eeeef0; transform: translateY(-2px); }
 .home-shell button:focus-visible { outline: 2px solid #767e8a; outline-offset: 4px; }
-.switch-hint { position: absolute; right: clamp(20px, 2.6vw, 50px); bottom: 33px; margin: 0; color: #8a8d94; font-size: 12px; }
+.switch-controls { position: absolute; z-index: 4; right: clamp(20px, 2.6vw, 50px); bottom: clamp(20px, 3.2vh, 34px); display: flex; align-items: center; gap: 18px; }
+.switch-hint { margin: 0; color: #625747; font-size: 12px; }
+.spin-button { position: static; background: rgb(250 247 241 / 88%); border-color: rgb(116 90 58 / 12%); }
+[data-experience-phase="switch"] .back-button { color: #473d32; background: rgb(250 247 241 / 88%); border-color: rgb(116 90 58 / 12%); }
 .keyboard-fallback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; color: #555; background: #fff; text-align: center; }
 .keyboard-fallback img { width: min(420px, 75vw); border-radius: 8px; }
 .keyboard-fallback h2 { font-size: 20px; font-weight: 500; margin: 0; }
@@ -127,8 +149,12 @@
 .placeholder-content p { color: var(--muted); }
 .return-home { color: var(--accent); width: fit-content; }
 @media (max-width: 480px) {
+  .switch-backdrop img {
+    width: max(170%, 126svh);
+    mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+  }
   .typing-panel { width: 640px; height: 200px; }
   .keyboard-text-input { font-size: 44px; padding: 20px; }
-  .switch-hint { bottom: 90px; left: 20px; right: auto; }
+  .switch-hint { position: absolute; bottom: 70px; right: 0; white-space: nowrap; }
 }
-@media (prefers-reduced-motion: reduce) { .start-button, .back-button { transition: none; } .keyboard-loader.is-complete { animation-duration: 0.1s; animation-delay: 0s; } }
+@media (prefers-reduced-motion: reduce) { .start-button, .back-button, .spin-button { transition: none; } .keyboard-loader.is-complete { animation-duration: 0.1s; animation-delay: 0s; } }

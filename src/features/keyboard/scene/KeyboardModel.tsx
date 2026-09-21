@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import type { SceneMotion } from "../animation/experience";
+import type { ExperiencePhase, SceneMotion } from "../animation/experience";
 import type { KeyRegistry } from "../interaction/key-registry";
 import type { AssemblyPlan, KeyboardDefinition } from "../model/keyboard-types";
 import { useKeyboardAssets } from "../model/use-keyboard-assets";
@@ -9,8 +9,9 @@ import { KeycapMesh } from "./KeycapMesh";
 import { SwitchInstances } from "./SwitchInstances";
 import { FocusedSwitch } from "./FocusedSwitch";
 import { assemblyPosition, FOCUSED_KEY, KEYBOARD_TILT } from "../model/assembly-motion";
+import { createDissolveEffect } from "../model/dissolve-material";
 
-type KeyboardModelProps = Readonly<{ plan: AssemblyPlan; registry: KeyRegistry; motion?: SceneMotion }>;
+type KeyboardModelProps = Readonly<{ plan: AssemblyPlan; registry: KeyRegistry; motion?: SceneMotion; phase?: ExperiencePhase; autoRotate?: boolean }>;
 const TILT = KEYBOARD_TILT;
 // KSA sockets sit 0.48 units above the common keycap/switch mounting plane.
 const KEYCAP_SOCKET_OFFSET = 0.48;
@@ -39,6 +40,7 @@ function foldedKeyboardScene(source: THREE.Group, definition: KeyboardDefinition
   frame.name = "assembledTopCase";
   upper.add(frame);
   const materials: THREE.Material[] = [];
+  const dissolves: ReturnType<typeof createDissolveEffect>[] = [];
   const parts: Array<{ object: THREE.Object3D; name: string }> = [];
   for (const node of [...keyboard.children]) {
     if (node.name === "shadowPlane" || node.name === "foam") { node.visible = false; continue; }
@@ -56,6 +58,9 @@ function foldedKeyboardScene(source: THREE.Group, definition: KeyboardDefinition
     const tint = (sourceMaterial: THREE.Material) => {
       const material = sourceMaterial.clone();
       materials.push(material);
+      const dissolve = createDissolveEffect(material);
+      dissolves.push(dissolve);
+      node.customDepthMaterial ??= dissolve.depthMaterial;
       if (color && material instanceof THREE.MeshStandardMaterial) {
         material.color.set(color);
         if (node.name === "bottomCase") { material.aoMap = material.map; material.aoMapIntensity = 0.3; material.map = null; }
@@ -68,27 +73,32 @@ function foldedKeyboardScene(source: THREE.Group, definition: KeyboardDefinition
   if (screw instanceof THREE.Mesh) {
     const screwMaterials = (Array.isArray(screw.material) ? screw.material : [screw.material]).map((material) => material.clone());
     materials.push(...screwMaterials);
+    const screwDissolves = screwMaterials.map((material) => createDissolveEffect(material));
+    dissolves.push(...screwDissolves);
     for (const [x, y, z, angle] of SIDE_SCREWS) {
       const mesh = new THREE.Mesh(screw.geometry, Array.isArray(screw.material) ? screwMaterials : screwMaterials[0]);
       mesh.name = "sideScrew";
       mesh.position.set(x, y, z);
       mesh.rotation.z = angle;
+      mesh.customDepthMaterial = screwDissolves[0].depthMaterial;
       frame.add(mesh);
     }
   }
   keyboard.add(upper);
   parts.push({ object: frame, name: "topCaseK" });
-  return { keyboard, materials, upper, parts };
+  return { keyboard, materials, dissolves, upper, parts };
 }
 
-export function KeyboardModel({ plan, registry, motion }: KeyboardModelProps) {
+export function KeyboardModel({ plan, registry, motion, phase, autoRotate }: KeyboardModelProps) {
   const assets = useKeyboardAssets();
-  const { keyboard, materials, upper, parts } = useMemo(() => foldedKeyboardScene(assets.keyboardScene, assets.definition, assets.commonScene), [assets.keyboardScene, assets.definition, assets.commonScene]);
+  const { keyboard, materials, dissolves, upper, parts } = useMemo(() => foldedKeyboardScene(assets.keyboardScene, assets.definition, assets.commonScene), [assets.keyboardScene, assets.definition, assets.commonScene]);
   const board = useRef<THREE.Group>(null);
   const keyDeck = useRef<THREE.Group>(null);
   const previous = useRef("");
-  const baseOpacities = useMemo(() => materials.map((material) => material.opacity), [materials]);
-  useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
+  useEffect(() => () => {
+    materials.forEach((material) => material.dispose());
+    dissolves.forEach((entry) => entry.depthMaterial.dispose());
+  }, [materials, dissolves]);
   const keycapSources = useMemo(() => new Map(
     [...plan.keycapModels].map((name) => [name, keycapMesh(assets.keycapScene, name)]),
   ), [assets.keycapScene, plan.keycapModels]);
@@ -112,11 +122,7 @@ export function KeyboardModel({ plan, registry, motion }: KeyboardModelProps) {
       assemblyPosition(name, motion.assembly, object.position);
       if (name === "feet" || name === "rubberFeet") object.position.y += 3 * motion.assembly;
     }
-    materials.forEach((material, index) => {
-      material.opacity = baseOpacities[index] * fade;
-      material.transparent = material.opacity < 1;
-      material.depthWrite = fade >= 0.99;
-    });
+    dissolves.forEach((entry) => { entry.progress.value = 1 - fade; });
   }, -3);
   const keyboardView = (
     <group ref={board} position={assets.definition.keyboardOffset} visible={!motion || motion.reveal > 0}>
@@ -150,5 +156,5 @@ export function KeyboardModel({ plan, registry, motion }: KeyboardModelProps) {
     </group>
   );
   if (!motion) return keyboardView;
-  return <>{keyboardView}<FocusedSwitch motion={motion} registry={registry} switchScene={assets.switchScene} orientation={assets.definition.switchOrientation} position={focusOrigin} /></>;
+  return <>{keyboardView}<FocusedSwitch motion={motion} registry={registry} switchScene={assets.switchScene} orientation={assets.definition.switchOrientation} position={focusOrigin} phase={phase} autoRotate={autoRotate} /></>;
 }
