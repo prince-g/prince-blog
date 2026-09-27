@@ -289,6 +289,37 @@ describe("keyboard scene capability and camera input", () => {
     expect(physicalKeyboardMock).not.toHaveBeenCalled();
   });
 
+  it("keeps the homepage reachable without WebGL", () => {
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => null }) });
+    const onContinue = vi.fn();
+    const output = rootHarness.render(() => KeyboardHero({ onContinue }));
+    expect(renderToStaticMarkup(output)).toContain("继续进入主页");
+    const button = findElement(output, "button");
+    (button!.props as { onClick: () => void }).onClick();
+    expect(onContinue).toHaveBeenCalledOnce();
+    expect(findElement(output, KeyboardCanvas)).toBeNull();
+  });
+
+  it("disables input and auto rotation during the homepage transition and preserves the error escape", () => {
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
+    const onContinue = vi.fn();
+    rootHarness.render(() => <KeyboardHero onContinue={onContinue} interactionDisabled />);
+    renderToStaticMarkup(rootHarness.output);
+    heroContentMocks.props!.onReady();
+    renderToStaticMarkup(rootHarness.output);
+    heroContentMocks.props!.onAssembled();
+    renderToStaticMarkup(rootHarness.output);
+    const binding = findElement(heroContentMocks.view, ReadyKeyboardBinding);
+    const canvas = findElement(heroContentMocks.view, KeyboardCanvas);
+    expect((binding!.props as { ready: boolean }).ready).toBe(false);
+    expect((canvas!.props as { experience: { autoRotate: boolean } }).experience.autoRotate).toBe(false);
+    expect(renderToStaticMarkup(heroContentMocks.view)).toContain('inert=""');
+    expect(physicalKeyboardMock).not.toHaveBeenCalled();
+    heroContentMocks.props!.onRuntimeError(new Error("lost context"));
+    renderToStaticMarkup(rootHarness.output);
+    expect(renderToStaticMarkup(heroContentMocks.view)).toContain("继续进入主页");
+  });
+
   it("binds the physical keyboard only after the complete scene is ready", () => {
     const registry = new KeyRegistry();
     renderToStaticMarkup(<ReadyKeyboardBinding ready={false} registry={registry} />);

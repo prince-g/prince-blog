@@ -65,8 +65,9 @@ describe("app shell", () => {
 
   it("keeps the home stage clean while retaining semantic navigation on secondary pages", () => {
     const home = renderRoute("/");
-    expect(home).not.toMatch(/<header\b/);
-    expect(home).not.toMatch(/<nav\b/);
+    const portalStart = elementStart(home, "div", { class: "touch-portal", inert: "", "aria-hidden": "true" });
+    expect(home.slice(0, portalStart)).not.toMatch(/<(header|nav)\b/);
+    expect(home.slice(portalStart)).toContain('aria-label="个人主页导航"');
     expect(home).not.toContain("PRINCE / DIGITAL GARDEN");
     expect(home).not.toContain("Ideas become interfaces.");
     expect(home).not.toContain("PRESS ANY KEY");
@@ -88,8 +89,8 @@ describe("app shell", () => {
 
     const contentOrder = [
       elementStart(main, "a", { href: "#main-content" }),
-      elementStart(main, "h1"),
       elementStart(main, "div", { class: "home-keyboard" }),
+      elementStart(main, "h1"),
       elementStart(main, "div", { role: "progressbar" }),
       elementStart(main, "textarea", { "aria-label": "键盘输入内容" }),
     ];

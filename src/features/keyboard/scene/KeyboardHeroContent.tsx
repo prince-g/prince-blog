@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { usePhysicalKeyboard } from "../interaction/use-physical-keyboard";
 import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 import { useAssetProgress } from "../model/asset-progress";
@@ -8,6 +8,7 @@ import { KeyboardErrorBoundary } from "./KeyboardErrorBoundary";
 import { KeyboardHeroState } from "./KeyboardHeroState";
 import type { KeyRegistry } from "../interaction/key-registry";
 import type { KeyboardHeroRuntimeState } from "./KeyboardHero";
+import { createSwitchContinueHandlers } from "../interaction/switch-continue";
 
 type ReadyKeyboardBindingProps = Readonly<{
   ready: boolean;
@@ -24,8 +25,30 @@ export function ReadyKeyboardBinding({ ready, registry, onTextInput }: ReadyKeyb
   return ready ? <PhysicalKeyboardBinding registry={registry} onTextInput={onTextInput} /> : null;
 }
 
-function SwitchKeyboardBinding({ registry }: { registry: KeyRegistry }) {
+function SwitchKeyboardBinding({ registry, onContinue, surface }: { registry: KeyRegistry; onContinue?: () => void; surface: RefObject<HTMLElement | null> }) {
   useEffect(() => {
+    if (onContinue) {
+      const handlers = createSwitchContinueHandlers(() => { registry.releaseAll(); onContinue(); });
+      const element = surface.current;
+      const reset = () => { handlers.reset(); registry.releaseAll(); };
+      window.addEventListener("keydown", handlers.keydown);
+      element?.addEventListener("pointerdown", handlers.pointerdown);
+      window.addEventListener("pointermove", handlers.pointermove);
+      window.addEventListener("pointerup", handlers.pointerup);
+      window.addEventListener("pointercancel", reset);
+      window.addEventListener("blur", reset);
+      document.addEventListener("visibilitychange", reset);
+      return () => {
+        window.removeEventListener("keydown", handlers.keydown);
+        element?.removeEventListener("pointerdown", handlers.pointerdown);
+        window.removeEventListener("pointermove", handlers.pointermove);
+        window.removeEventListener("pointerup", handlers.pointerup);
+        window.removeEventListener("pointercancel", reset);
+        window.removeEventListener("blur", reset);
+        document.removeEventListener("visibilitychange", reset);
+        reset();
+      };
+    }
     const down = (event: KeyboardEvent) => {
       if (event.code !== "Space" || event.repeat || event.isComposing || (event.target instanceof Element && event.target.closest("button,input,textarea"))) return;
       event.preventDefault();
@@ -42,7 +65,7 @@ function SwitchKeyboardBinding({ registry }: { registry: KeyRegistry }) {
       window.removeEventListener("blur", reset); document.removeEventListener("visibilitychange", reset);
       reset();
     };
-  }, [registry]);
+  }, [registry, onContinue, surface]);
   return null;
 }
 
@@ -64,10 +87,14 @@ type KeyboardHeroContentProps = Readonly<{
   onReturned: () => void;
   autoRotate: boolean;
   onToggleAutoRotate: () => void;
+  onContinue?: () => void;
+  interactionDisabled?: boolean;
 }>;
 
 export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRuntimeError, onTextInput, resetRequest,
-  motion, typedText, onTextChange, onAssembled, onEnter, onSwitch, onBack, onReturned, autoRotate, onToggleAutoRotate }: KeyboardHeroContentProps) {
+  motion, typedText, onTextChange, onAssembled, onEnter, onSwitch, onBack, onReturned, autoRotate, onToggleAutoRotate,
+  onContinue, interactionDisabled = false }: KeyboardHeroContentProps) {
+  const surface = useRef<HTMLElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const cameraLayer = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -76,13 +103,17 @@ export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRunti
   const progress = useAssetProgress();
   const phase = state.status;
   useEffect(() => {
-    if (phase === "ready" && !matchMedia("(pointer: coarse)").matches) textarea.current?.focus({ preventScroll: true });
-    else if (phase !== "ready") textarea.current?.blur();
-  }, [phase]);
+    if (phase === "ready" && !interactionDisabled && !matchMedia("(pointer: coarse)").matches) textarea.current?.focus({ preventScroll: true });
+    else textarea.current?.blur();
+    if (interactionDisabled) registry.releaseAll();
+  }, [phase, interactionDisabled, registry]);
 
-  if (phase === "error") return <section aria-label="Keychron K2 HE 交互式三维键盘"><KeyboardHeroState state="error" onRetry={onRetry} /></section>;
+  if (phase === "error") return <section aria-label="Keychron K2 HE 交互式三维键盘" inert={interactionDisabled}>
+    <KeyboardHeroState state="error" onRetry={onRetry} />
+    {onContinue && <button className="start-button" type="button" onClick={onContinue}>继续进入主页 <span aria-hidden="true">↗</span></button>}
+  </section>;
 
-  return <section aria-label={phase === "switch" ? "磁轴交互展示" : "Keychron K2 HE 交互式三维键盘"} data-experience-phase={phase}>
+  return <section ref={surface} inert={interactionDisabled} aria-label={phase === "switch" ? "磁轴交互展示" : "Keychron K2 HE 交互式三维键盘"} data-experience-phase={phase}>
     <KeyboardErrorBoundary key={state.canvasKey} onError={onRuntimeError} onRetry={onRetry}>
       <div className="switch-backdrop" ref={backdrop} aria-hidden="true">
         <img src="/images/switch-fresco/creation-hands.webp" alt="" draggable={false} />
@@ -98,7 +129,7 @@ export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRunti
         <div className="typing-camera" ref={cameraLayer}>
           <div className="typing-panel" ref={panel}>
             <textarea ref={textarea} aria-label="键盘输入内容" className="keyboard-text-input" placeholder="Typing on the keyboard ..."
-              value={typedText} spellCheck={false} disabled={phase !== "ready"} tabIndex={phase === "ready" ? 0 : -1}
+              value={typedText} spellCheck={false} disabled={phase !== "ready" || interactionDisabled} tabIndex={phase === "ready" && !interactionDisabled ? 0 : -1}
               onChange={(event) => onTextChange(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return;
@@ -108,15 +139,15 @@ export function KeyboardHeroContent({ state, registry, onReady, onRetry, onRunti
           </div>
         </div>
       </div>
-      <ReadyKeyboardBinding ready={phase === "ready"} registry={registry} onTextInput={onTextInput} />
+      <ReadyKeyboardBinding ready={phase === "ready" && !interactionDisabled} registry={registry} onTextInput={onTextInput} />
       {phase === "ready" && <button className="start-button" aria-label="进入磁轴展示" title="进入磁轴展示" type="button" onClick={() => onEnter("button")}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 4.5 19 12 8 19.5Z" fill="currentColor" /></svg>
       </button>}
       {phase === "switch" && <>
-        <SwitchKeyboardBinding registry={registry} />
+        {!interactionDisabled && <SwitchKeyboardBinding registry={registry} onContinue={onContinue} surface={surface} />}
         <button className="back-button" type="button" onClick={onBack} aria-label="返回键盘"><span aria-hidden="true">←</span> 返回键盘</button>
         <div className="switch-controls">
-          <p className="switch-hint">拖动查看 · 点击或空格按压</p>
+          <p className="switch-hint">{onContinue ? "按任意键或点击，继续探索" : "拖动查看 · 点击或空格按压"}</p>
           <button className="spin-button" type="button" onClick={onToggleAutoRotate} aria-label={autoRotate ? "暂停自转" : "继续自转"} title={autoRotate ? "暂停自转" : "继续自转"}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
               {autoRotate ? <path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="2" /> : <path d="m8 5 11 7-11 7Z" fill="currentColor" />}

@@ -130,9 +130,11 @@ export function createWebGLCapabilityProbe(createCanvas?: () => WebGLCanvas): ()
 type KeyboardHeroProps = Readonly<{
   onTextInput?: KeyboardTextInputHandler;
   resetRequest?: number;
+  onContinue?: () => void;
+  interactionDisabled?: boolean;
 }>;
 
-export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
+export function KeyboardHero({ onTextInput, resetRequest, onContinue, interactionDisabled = false }: KeyboardHeroProps) {
   const [registry] = useState(() => new KeyRegistry());
   const [orchestration] = useState(() => createKeyboardHeroOrchestration(registry));
   const [, rerender] = useReducer((version: number) => version + 1, 0);
@@ -140,6 +142,11 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
   const [motion] = useState(createSceneMotion);
   const [typedText, setTypedText] = useState("");
   const [autoRotate, setAutoRotate] = useState(true);
+  const continueExperience = useCallback(() => {
+    if (interactionDisabled) return;
+    registry.releaseAll();
+    onContinue?.();
+  }, [interactionDisabled, onContinue, registry]);
 
   const enter = useCallback((source: "button" | "keyboard") => {
     if (orchestration.state.status === "error" || !canEnterSwitch(orchestration.state.status, typedText, source)) return;
@@ -180,7 +187,10 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
     if (orchestration.onRetry()) rerender();
   }, [motion, orchestration]);
 
-  if (!probeWebGL()) return <KeyboardHeroState state="no-webgl" />;
+  if (!probeWebGL()) return <section inert={interactionDisabled}>
+    <KeyboardHeroState state="no-webgl" />
+    {onContinue && <button className="start-button" type="button" onClick={continueExperience}>继续进入主页 <span aria-hidden="true">↗</span></button>}
+  </section>;
 
   return (
     <KeyboardHeroContent
@@ -199,8 +209,10 @@ export function KeyboardHero({ onTextInput, resetRequest }: KeyboardHeroProps) {
       onSwitch={showSwitch}
       onBack={back}
       onReturned={returned}
-      autoRotate={autoRotate}
+      autoRotate={autoRotate && !interactionDisabled}
       onToggleAutoRotate={() => setAutoRotate((value) => !value)}
+      onContinue={onContinue ? continueExperience : undefined}
+      interactionDisabled={interactionDisabled}
     />
   );
 }
