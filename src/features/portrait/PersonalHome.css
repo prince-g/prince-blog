@@ -1,0 +1,64 @@
+@font-face { font-family: Manrope; src: url('/fonts/manrope/Manrope.ttf') format('truetype'); font-weight: 200 800; font-display: swap; }
+.touch-portal { position: absolute; z-index: 6; inset: 0; visibility: hidden; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+.touch-portal.is-open { visibility: visible !important; clip-path: none !important; opacity: 1 !important; }
+.touch-sparks { position: absolute; z-index: 7; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.personal-home { --portrait-ink: #24251e; position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; font-family: Manrope, ui-sans-serif, system-ui, sans-serif; color: var(--portrait-ink); background: #a3a28d url('/media/portrait/portrait-background.png') center / cover fixed; scrollbar-color: #6c6d59 #a3a28d; }
+.personal-home button, .personal-home a { -webkit-tap-highlight-color: transparent; }
+.personal-home button { font: inherit; cursor: pointer; }
+.personal-home a { color: inherit; text-decoration: none; }
+.personal-home ::selection { color: #f5f1df; background: #434b34; }
+.personal-home :focus-visible { outline: 2px solid #3d452e; outline-offset: 5px; }
+.personal-hero { position: relative; isolation: isolate; min-height: 760px; height: 100svh; overflow: hidden; }
+.portrait-film { position: absolute; z-index: 1; top: 10%; left: 25%; width: 94%; height: 90%; pointer-events: none; mask-image: linear-gradient(to right, transparent, #000 18%, #000 86%, transparent), linear-gradient(to bottom, transparent, #000 7%); mask-composite: intersect; }
+.portrait-film__frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+.personal-wordmark { position: absolute; z-index: 2; bottom: 13%; left: 6.8%; font-size: clamp(64px, 8.2vw, 150px); font-weight: 750; letter-spacing: -.04em; line-height: .84; color: rgb(245 242 221 / 25%); pointer-events: none; }
+.personal-header { position: relative; z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 28px 5.3%; }
+.personal-brand { font-size: 24px; font-weight: 750; letter-spacing: -.035em; white-space: nowrap; }
+.personal-brand span { font-size: 19px; font-weight: 450; letter-spacing: -.02em; }.personal-brand i { color: #414d31; font-style: normal; }
+.personal-nav { display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 40px; background: rgb(240 239 225 / 36%); border: 1px solid rgb(255 255 239 / 45%); backdrop-filter: blur(20px) saturate(.8); -webkit-backdrop-filter: blur(20px) saturate(.8); }
+.personal-nav a { padding: 11px 24px; border-radius: 24px; font-size: 13px; transition: background .18s; }
+.personal-nav a:hover, .personal-nav a[aria-current] { background: rgb(250 249 236 / 55%); }
+.personal-menu { display: flex; gap: 9px; align-items: center; padding: 12px 16px; border-radius: 13px; border: 1px solid rgb(255 255 240 / 44%); background: rgb(242 240 226 / 35%); backdrop-filter: blur(16px); font-size: 11px !important; letter-spacing: .04em; }
+.personal-menu-panel { position: absolute; top: 82px; right: 5.3%; display: grid; padding: 10px; border-radius: 14px; background: rgb(237 236 219 / 86%); backdrop-filter: blur(20px); }
+.personal-menu-panel button { border: 0; padding: 13px 25px; border-radius: 9px; background: none; color: inherit; text-align: left; font-size: 12px; }
+.personal-menu-panel button:hover { background: rgb(255 255 239 / 40%); }
+.personal-copy { position: relative; z-index: 3; margin: clamp(60px, 9vh, 112px) 0 0 7%; width: 39%; }
+.personal-copy h1 { margin: 0; font-size: clamp(52px, 5.9vw, 90px); font-weight: 620; letter-spacing: -.04em; line-height: .98; outline: none; }
+.personal-copy h1:focus-visible { outline: none; }
+.personal-copy em, .personal-index em { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.personal-copy p { margin: 30px 0 25px; font-size: 14px; line-height: 1.9; color: #37392e; }
+.personal-actions { display: flex; align-items: center; gap: 25px; }
+.personal-primary { display: inline-flex; align-items: center; gap: 18px; padding: 7px 7px 7px 21px; background: #292d23; color: #f5f4e8; border: 0; border-radius: 32px; font-size: 12px !important; }
+.personal-primary > span { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 50%; background: #f3f1e2; color: #292d23; transition: transform .2s; }
+.personal-primary:hover > span { transform: rotate(-35deg); }
+.personal-secondary { display: inline-flex; gap: 13px; align-items: center; font-size: 12px; border-bottom: 1px solid #555b42; padding-block: 8px; }
+.personal-footer { position: absolute; z-index: 4; bottom: 27px; left: 5.3%; right: 5.3%; display: flex; justify-content: space-between; align-items: center; font-size: 10px; letter-spacing: .1em; }
+.personal-footer button { display: inline-flex; align-items: center; gap: 12px; padding: 12px 15px; border: 0; border-radius: 24px; background: rgb(240 239 225 / 55%); backdrop-filter: blur(16px); color: #292d23; font-size: 12px; letter-spacing: 0; }
+.personal-index { min-height: 100svh; padding: clamp(60px, 10vw, 140px) 8% 30px; background: #e8e7da; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-content: center; }
+.personal-index h2 { font-size: clamp(44px, 5vw, 72px); font-weight: 500; line-height: 1.14; letter-spacing: -.04em; margin: 0 0 28px; }
+.personal-index p { font-size: 13px; line-height: 1.8; }
+.personal-index-links > a { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #bcbfaf; padding: 25px 0; }
+.personal-index-links > a:first-child { border-top: 1px solid #bcbfaf; }
+.personal-index-links span { font-size: 35px; font-weight: 400; letter-spacing: -.03em; }
+.personal-index-links small { display: block; font-size: 12px; letter-spacing: 0; padding-top: 6px; color: #575d4a; }
+.personal-index-links svg { transition: transform .2s; }.personal-index-links a:hover svg { transform: translateX(5px); }
+.personal-index footer { grid-column: 1/-1; display: flex; justify-content: space-between; align-items: center; margin-top: 70px; font-size: 10px; letter-spacing: .07em; }
+.personal-index footer button { display: flex; gap: 12px; align-items: center; padding: 10px 0; border: 0; background: none; font-size: 12px; }
+@media (min-width: 1800px) { .personal-hero { max-height: 1200px; }.personal-copy { margin-top: 13vh; }.portrait-film { left: 24%; } }
+@media (max-width: 900px) {
+  .personal-header { padding: 24px 5%; }.personal-nav a { padding: 11px 17px; }.personal-copy { margin-left: 6%; width: 43%; }
+  .personal-copy h1 { font-size: clamp(48px, 7vw, 66px); }.portrait-film { left: 19%; width: 115%; }.personal-actions { gap: 15px; }
+}
+@media (max-width: 600px) {
+  .personal-hero { min-height: 730px; }.personal-header { padding: 20px 22px; }.personal-brand { font-size: 23px; }.personal-brand span { font-size: 17px; }
+  .personal-nav { position: absolute; top: 73px; right: 22px; display: none; flex-direction: column; border-radius: 18px; padding: 9px; background: rgb(237 236 219 / 86%); align-items: stretch; }
+  .personal-nav.is-expanded { display: flex; }.personal-nav a { padding: 13px 34px; }
+  .personal-menu { min-height: 42px; }.personal-menu span { display: none; }
+  .personal-copy { margin: 35px 0 0 7%; width: 86%; }.personal-copy h1 { font-size: clamp(47px, 12vw, 66px); line-height: 1; }
+  .personal-copy h1 br:nth-child(2) { display: none; }.personal-copy h1 em::before { content: ' '; }
+  .personal-copy p { font-size: 12px; margin: 18px 0; line-height: 1.7; }.personal-actions { gap: 22px; }.personal-primary { gap: 14px; }
+  .portrait-film { top: 41%; left: -21%; width: 142%; height: 59%; mask-image: linear-gradient(to bottom, transparent, #000 14%, #000); }
+  .personal-wordmark, .personal-menu-panel { display: none; }.personal-footer { bottom: 15px; left: 6%; right: 6%; }.personal-footer > span { font-size: 8px; max-width: 85px; line-height: 1.5; color: #f4f1dd; }
+  .personal-footer button { font-size: 11px; background: rgb(240 239 225 / 75%); }.personal-index { grid-template-columns: 1fr; padding: 70px 8% 25px; gap: 28px; }.personal-index footer { margin-top: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { .personal-home * { scroll-behavior: auto !important; transition: none !important; } }
