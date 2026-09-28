@@ -1,0 +1,118 @@
+{
+  "sourceDocument": "E:/download/creative-portfolio1.html",
+  "stylesheet": "https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap",
+  "fonts": [
+    {
+      "source": "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3K8-C8QSw.woff2",
+      "path": "/fonts/creative-portfolio/anton-01.woff2",
+      "family": "Anton",
+      "bytes": 8680,
+      "contentType": "font/woff2",
+      "sha256": "82cc85bd416dc825c05b4264a8a58e189e528fed8a05fbd471b5493e010d623b"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3K9-C8QSw.woff2",
+      "path": "/fonts/creative-portfolio/anton-02.woff2",
+      "family": "Anton",
+      "bytes": 31356,
+      "contentType": "font/woff2",
+      "sha256": "0d17b7880f389deeb6663a52fa4eadc6d9116bdda725f0aa1f3d404fbb7d3d59"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3Kz-C8.woff2",
+      "path": "/fonts/creative-portfolio/anton-03.woff2",
+      "family": "Anton",
+      "bytes": 18612,
+      "contentType": "font/woff2",
+      "sha256": "d0fa07ff63dd60cbc0e2f58e29c802dca2a5ae0276c999f59c6111ab7bbaec3b"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/caveat/v23/Wnz6HAc5bAfYB2Q7azYYmg8.woff2",
+      "path": "/fonts/creative-portfolio/caveat-04.woff2",
+      "family": "Caveat",
+      "bytes": 42856,
+      "contentType": "font/woff2",
+      "sha256": "4956ec7b19798cb8418f2e44349e90c0ab7310594350c4b9c2998dc092122d5a"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/caveat/v23/Wnz6HAc5bAfYB2Q7YjYYmg8.woff2",
+      "path": "/fonts/creative-portfolio/caveat-05.woff2",
+      "family": "Caveat",
+      "bytes": 77216,
+      "contentType": "font/woff2",
+      "sha256": "6276a2f5a5554c16b422f00f114773a8d4013a81df18a338f7c216d80103c9af"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/caveat/v23/Wnz6HAc5bAfYB2Q7aDYYmg8.woff2",
+      "path": "/fonts/creative-portfolio/caveat-06.woff2",
+      "family": "Caveat",
+      "bytes": 29472,
+      "contentType": "font/woff2",
+      "sha256": "f626b95c1efa95cf6b7c9b043d3bbe8862b6abbe5f55a082102f33f7de2fd4f9"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/caveat/v23/Wnz6HAc5bAfYB2Q7ZjYY.woff2",
+      "path": "/fonts/creative-portfolio/caveat-07.woff2",
+      "family": "Caveat",
+      "bytes": 74932,
+      "contentType": "font/woff2",
+      "sha256": "891951df5e8b5b0f0bc760d31375405e795c666b5add70437de12d4a6482b33f"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-08.woff2",
+      "family": "Inter",
+      "bytes": 25960,
+      "contentType": "font/woff2",
+      "sha256": "ca157063339ac4ad418f214f3abfed119b0798ab4d377386ce5c9e5a7a435ebd"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-09.woff2",
+      "family": "Inter",
+      "bytes": 18748,
+      "contentType": "font/woff2",
+      "sha256": "71d5ee93cc1e9f1d520a3a8b66456de18c7879d8df09d57fcd2eaff75fef0075"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-10.woff2",
+      "family": "Inter",
+      "bytes": 11232,
+      "contentType": "font/woff2",
+      "sha256": "6e9e020a25f9b56d418f2c085b1d3c09725a4da23fe693a5b463064606732190"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-11.woff2",
+      "family": "Inter",
+      "bytes": 18996,
+      "contentType": "font/woff2",
+      "sha256": "1be3448e292fbf05ffe176fe1e43f135013d50b1e7d324ad1a558f623d3bb6f6"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-12.woff2",
+      "family": "Inter",
+      "bytes": 10252,
+      "contentType": "font/woff2",
+      "sha256": "5c66f9e07e90c6d4ac4922cc68d60de26c17b1858e677fb5e603fce3952b3ff2"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2",
+      "path": "/fonts/creative-portfolio/inter-13.woff2",
+      "family": "Inter",
+      "bytes": 85068,
+      "contentType": "font/woff2",
+      "sha256": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956"
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "path": "/fonts/creative-portfolio/inter-14.woff2",
+      "family": "Inter",
+      "bytes": 48256,
+      "contentType": "font/woff2",
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+    }
+  ]
+}

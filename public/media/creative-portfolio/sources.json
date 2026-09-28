@@ -1,0 +1,345 @@
+{
+  "sourceDocument": "E:/download/creative-portfolio1.html",
+  "images": [
+    {
+      "source": "https://i.pravatar.cc/300?img=12",
+      "path": "/media/creative-portfolio/01-avatar-12-300.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 13809,
+      "sha256": "37da3616a88e1a12da551338c01469a0ac4e23f64b3b5534f2655aa06a96206a",
+      "width": 300,
+      "height": 300,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/300?img=47",
+      "path": "/media/creative-portfolio/02-avatar-47-300.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 16833,
+      "sha256": "fe65d132b66675b73af17d59d63618ed531238c60064745d2f1e2c0a5fdc912b",
+      "width": 300,
+      "height": 300,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/glassroom/300/300",
+      "path": "/media/creative-portfolio/03-glassroom.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 16263,
+      "sha256": "b8b72bfb08c0da1840488fb31408368ae42f7ae07ed0ce190336032ebe2601af",
+      "width": 300,
+      "height": 300,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://aura.collectui.pro/__mi/hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg",
+      "path": "/media/creative-portfolio/04-hero-painting.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 77557,
+      "sha256": "585a27183f42ba3e445f4cfb2a80d4e3b45de28606857c5053f0e30f81392ab0",
+      "width": 1600,
+      "height": 1600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/noema-hero-art/500/280",
+      "path": "/media/creative-portfolio/05-noema-hero-art.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 22196,
+      "sha256": "47223b1708711422bbc73e41696ab45f8df40a2071acf1791d1d324c65f4ddf1",
+      "width": 500,
+      "height": 280,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=47",
+      "path": "/media/creative-portfolio/06-avatar-47-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 4295,
+      "sha256": "89bbe351a9ddd50429ac0c7348ce5723c121ad12da94c0877d9328fb15138f5a",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/noema-a1/120/120",
+      "path": "/media/creative-portfolio/07-noema-a1.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 1699,
+      "sha256": "4c46edf3b693346a222e489a3a676a7038fa89ef636c6e28fe1f8ee69b96b477",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/noema-a2/120/120",
+      "path": "/media/creative-portfolio/08-noema-a2.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 4002,
+      "sha256": "5228f2766700651d5f765b58d781e94213f16561edad6cd674064b569ca3b4ae",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/noema-a3/120/120",
+      "path": "/media/creative-portfolio/09-noema-a3.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 3758,
+      "sha256": "8ffd08d72f298ee312b66b16e95cf78bb7ddb2f295fa0cc7436089602fc6ad99",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-01/480/600",
+      "path": "/media/creative-portfolio/10-archive-01.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 30182,
+      "sha256": "df35a890c29da51e5f7249ddc417194098a181eae7ef383c11d27355d4247110",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-02/480/600",
+      "path": "/media/creative-portfolio/11-archive-02.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 25889,
+      "sha256": "e539e9a9bb4bc7ae22748778d447126619144cab0ec41322cc2290f2c93ba5e4",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-03/480/600",
+      "path": "/media/creative-portfolio/12-archive-03.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 73961,
+      "sha256": "4698483f914c99a51b783c36740c6846619d31cc94e3ee3e4616eea53f2bec21",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-04/480/600",
+      "path": "/media/creative-portfolio/13-archive-04.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 34827,
+      "sha256": "dc23d2a75c003ed0e3392d193d27c2358e4acbc58ed37bcad869d62ab5c43202",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-05/480/600",
+      "path": "/media/creative-portfolio/14-archive-05.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 56285,
+      "sha256": "d812cabef4dd470d9571af7fab9009cd1795282b770c71d8cd3e04cca0a52d15",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-06/480/600",
+      "path": "/media/creative-portfolio/15-archive-06.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 7074,
+      "sha256": "c214d21625564acde2094ec56155b9a142e361e234b77c7b5c8a66701c8cfa80",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-07/480/600",
+      "path": "/media/creative-portfolio/16-archive-07.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 62256,
+      "sha256": "3ddb605ca8eb5c2cacec14438b70dd5076f9d2d21798b1b3a31da793c32180ce",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-08/480/600",
+      "path": "/media/creative-portfolio/17-archive-08.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 68595,
+      "sha256": "344d064f7ad02a6cd144857eceb50c2e0b50726a120e69a9429712637dccae2f",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-09/480/600",
+      "path": "/media/creative-portfolio/18-archive-09.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 54019,
+      "sha256": "7f5f0445ef99752ac21ac0bcaa80611cadc2c61e67744780223f0a7f2b88a45e",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-10/480/600",
+      "path": "/media/creative-portfolio/19-archive-10.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 20825,
+      "sha256": "f6aa0ce8e9d3f6161290656a9f31e3a87fd6aa39d8e5b632cdae6e7251a7665a",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-11/480/600",
+      "path": "/media/creative-portfolio/20-archive-11.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 45215,
+      "sha256": "0207668e570a26704ee1429dbf4e80d0ef9848b752656ed75b20c52914c83750",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-12/480/600",
+      "path": "/media/creative-portfolio/21-archive-12.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 31652,
+      "sha256": "684a7809cc0aa5ea8e3951e6f0c32306488dc5797ab422890cd6bec1ff87f771",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-13/480/600",
+      "path": "/media/creative-portfolio/22-archive-13.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 28634,
+      "sha256": "62d23c3ff607cf0978f3f46d78804e4e7104b2fa9d8c0dc4d4cd228b2cbd6ef4",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-14/480/600",
+      "path": "/media/creative-portfolio/23-archive-14.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 30337,
+      "sha256": "58f5fb268f0b5c4765ec2c897bed9d59671a7a572f0c6b8ad8c6af4823127c7c",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/archive-15/480/600",
+      "path": "/media/creative-portfolio/24-archive-15.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 34042,
+      "sha256": "335315c16b941a8470922f1f82524bc47e4c397aedc6fd19ecbdd5920c987f15",
+      "width": 480,
+      "height": 600,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/build-a/120/120",
+      "path": "/media/creative-portfolio/25-build-a.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 2472,
+      "sha256": "7187ceb83950118c922d052d6af5f5867479ceded6834c0b012ae211770867cb",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/build-b/120/120",
+      "path": "/media/creative-portfolio/26-build-b.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 4883,
+      "sha256": "e4bb48801408ef5bbacd09d3a3575561a886892ed9434d277c3c73a21786f5e1",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/build-c/120/120",
+      "path": "/media/creative-portfolio/27-build-c.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 3974,
+      "sha256": "af3310eaefc21d118e9a19af350333fe558da117461fee4a42146b0aa09e40fe",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://picsum.photos/seed/build-d/120/120",
+      "path": "/media/creative-portfolio/28-build-d.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 5249,
+      "sha256": "f51cec177c633621891696d949149a32f396d1c54bd853c806eea3def971e075",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=15",
+      "path": "/media/creative-portfolio/29-avatar-15-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 3734,
+      "sha256": "c062c2b8d52672fb95836495ce454700657cfa4b1d5b3ee2f9a2a18bdad35d85",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=32",
+      "path": "/media/creative-portfolio/30-avatar-32-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 3588,
+      "sha256": "3e58349e202a8fd98acc5e96abec28d229bf95fa171574d0c09ffc9abdfd7bf4",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=5",
+      "path": "/media/creative-portfolio/31-avatar-5-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 4018,
+      "sha256": "6e0930f5ff813593d794560e4853345892d8722d6abc92826046882ec764f160",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=58",
+      "path": "/media/creative-portfolio/32-avatar-58-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 5911,
+      "sha256": "2fd1254dc374a74769e500e335cde5200189f0e6f32f084f23d635f523ba799c",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=23",
+      "path": "/media/creative-portfolio/33-avatar-23-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 2508,
+      "sha256": "66df9335c8799121d3a3f3014556bf1daef5fc65c38f12bd04997de7431ecdd7",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    },
+    {
+      "source": "https://i.pravatar.cc/120?img=68",
+      "path": "/media/creative-portfolio/34-avatar-68-120.jpg",
+      "contentType": "image/jpeg",
+      "bytes": 2578,
+      "sha256": "0e405437c079d04bc71ee10cdb89eec870f78562f067d10dacd31913af1690d1",
+      "width": 120,
+      "height": 120,
+      "format": "JPEG"
+    }
+  ]
+}
