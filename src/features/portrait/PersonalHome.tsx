@@ -107,14 +107,5 @@ export function PersonalHome({ active, onReplay }: { active: boolean; onReplay: 
     <section ref={content} aria-label="视觉作品与交互探索">
       {active && <Suspense fallback={<div style={{ minHeight: "100svh", background: "#efebe3" }} />}><PortfolioExperience scroller={scroller} /></Suspense>}
     </section>
-    <section className="personal-index" id="personal-index" aria-labelledby="personal-index-title">
-      <div className="personal-index-heading"><h2 id="personal-index-title">想法，<br /><em>继续生长。</em></h2><p>作品、记录，以及屏幕之外的我。</p></div>
-      <div className="personal-index-links">
-        <a href="/work"><span>Work<small>作品与实验</small></span><Arrow /></a>
-        <a href="/notes"><span>Notes<small>开发与日常记录</small></span><Arrow /></a>
-        <a href="/about"><span>About<small>关于 Prince</small></span><Arrow /></a>
-      </div>
-      <footer><span>PRINCE BLOG</span><button onClick={onReplay}>重新体验键盘 <Arrow /></button></footer>
-    </section>
   </div>;
 }
