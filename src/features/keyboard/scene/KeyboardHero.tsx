@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { KeyRegistry } from "../interaction/key-registry";
 import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 import { resetKeyboardAssetCaches } from "../model/use-keyboard-assets";
@@ -6,6 +6,8 @@ import { KeyboardHeroContent } from "./KeyboardHeroContent";
 import { KeyboardHeroState } from "./KeyboardHeroState";
 import { resetKeyboardSceneAssetCache } from "./KeyboardScene";
 import { canEnterSwitch, createSceneMotion, type ExperiencePhase } from "../animation/experience";
+import { createKeyboardAudio } from "../interaction/keyboard-audio";
+import { useKeyboardAppearance } from "./use-keyboard-appearance";
 
 export { KeyboardHeroContent, ReadyKeyboardBinding } from "./KeyboardHeroContent";
 export { KeyboardHeroState } from "./KeyboardHeroState";
@@ -20,7 +22,7 @@ export type KeyboardHeroRuntimeState = Readonly<{
   canvasKey: number;
 }>;
 
-type KeyboardHeroRuntimeEvent = "ready" | "assembled" | "enter" | "switch" | "back" | "returned" | "error" | "retry";
+type KeyboardHeroRuntimeEvent = "ready" | "assembled" | "enter" | "switch" | "back" | "returned" | "continue" | "error" | "retry";
 
 export const initialKeyboardHeroRuntimeState: KeyboardHeroRuntimeState = {
   status: "loading",
@@ -36,7 +38,7 @@ export function updateKeyboardHeroRuntimeState(
   }
   if (event === "error") return { ...state, status: "error" };
   if (event === "retry") return { status: "loading", canvasKey: state.canvasKey + 1 };
-  const transitions = { assembled: ["assembling", "ready"], enter: ["ready", "exiting"], switch: ["exiting", "switch"], back: ["switch", "returning"], returned: ["returning", "ready"] } as const;
+  const transitions = { assembled: ["assembling", "ready"], enter: ["ready", "exiting"], switch: ["exiting", "switch"], back: ["switch", "returning"], returned: ["returning", "ready"], continue: ["switch", "leaving"] } as const;
   const [from, to] = transitions[event];
   return state.status === from ? { ...state, status: to } : state;
 }
@@ -136,21 +138,33 @@ type KeyboardHeroProps = Readonly<{
 
 export function KeyboardHero({ onTextInput, resetRequest, onContinue, interactionDisabled = false }: KeyboardHeroProps) {
   const [registry] = useState(() => new KeyRegistry());
+  const appearance = useKeyboardAppearance();
+  useEffect(() => {
+    const audio = createKeyboardAudio();
+    registry.setAudio(audio);
+    void audio.preload();
+    return () => { registry.setAudio(); audio.dispose(); };
+  }, [registry]);
   const [orchestration] = useState(() => createKeyboardHeroOrchestration(registry));
   const [, rerender] = useReducer((version: number) => version + 1, 0);
   const [probeWebGL] = useState(() => createWebGLCapabilityProbe());
   const [motion] = useState(createSceneMotion);
   const [typedText, setTypedText] = useState("");
   const [autoRotate, setAutoRotate] = useState(true);
+  const [handoff] = useState(() => ({ sent: false }));
   const continueExperience = useCallback(() => {
-    if (interactionDisabled) return;
-    registry.releaseAll();
-    onContinue?.();
-  }, [interactionDisabled, onContinue, registry]);
+    if (interactionDisabled || handoff.sent) return;
+    registry.releaseAll(false);
+    if (orchestration.transition("continue") || orchestration.state.status === "error" || !probeWebGL()) {
+      handoff.sent = true;
+      rerender();
+      onContinue?.();
+    }
+  }, [handoff, interactionDisabled, onContinue, orchestration, probeWebGL, registry]);
 
   const enter = useCallback((source: "button" | "keyboard") => {
     if (orchestration.state.status === "error" || !canEnterSwitch(orchestration.state.status, typedText, source)) return;
-    registry.releaseAll();
+    registry.releaseAll(false);
     if (orchestration.transition("enter")) rerender();
   }, [orchestration, registry, typedText]);
 
@@ -162,7 +176,7 @@ export function KeyboardHero({ onTextInput, resetRequest, onContinue, interactio
   }, [orchestration]);
   const back = useCallback(() => {
     if (!orchestration.transition("back")) return;
-    registry.releaseAll();
+    registry.releaseAll(false);
     rerender();
   }, [orchestration, registry]);
   const returned = useCallback(() => {
@@ -184,8 +198,9 @@ export function KeyboardHero({ onTextInput, resetRequest, onContinue, interactio
 
   const retry = useCallback(() => {
     Object.assign(motion, createSceneMotion());
+    handoff.sent = false;
     if (orchestration.onRetry()) rerender();
-  }, [motion, orchestration]);
+  }, [handoff, motion, orchestration]);
 
   if (!probeWebGL()) return <section inert={interactionDisabled}>
     <KeyboardHeroState state="no-webgl" />
@@ -195,6 +210,7 @@ export function KeyboardHero({ onTextInput, resetRequest, onContinue, interactio
   return (
     <KeyboardHeroContent
       registry={registry}
+      appearance={appearance}
       state={orchestration.state}
       onReady={handleReady}
       onRetry={retry}

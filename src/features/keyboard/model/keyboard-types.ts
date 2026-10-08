@@ -1,5 +1,7 @@
 export type Vector3Data = Readonly<{ x: number; y: number; z: number }>;
 export type KeycapPalette = Readonly<{ keycapColor: string; fontColor: string }>;
+export const KEYBOARD_PRESETS = ["White", "PureWhite", "Black", "PureBlack"] as const;
+export type KeyboardPresetId = typeof KEYBOARD_PRESETS[number];
 export type KeyboardColorSet = Readonly<{
   highlightColor: KeycapPalette;
   primaryColor: KeycapPalette;
@@ -24,6 +26,7 @@ export type KeyboardDefinition = Readonly<{
   switchOrientation: "north" | "south";
   keyPosition: Readonly<Record<string, KeyboardKeyDefinition>>;
   colorSet: KeyboardColorSet;
+  colorSets: Readonly<Record<KeyboardPresetId, KeyboardColorSet>>;
   foldedPositions: Readonly<Record<string, Vector3Data>>;
 }>;
 

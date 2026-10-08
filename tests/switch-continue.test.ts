@@ -19,6 +19,7 @@ describe("continue from the focused switch", () => {
     handlers.pointerdown(pointer());
     handlers.pointerup(pointer());
     expect(onContinue).toHaveBeenCalledOnce();
+    expect(onContinue).toHaveBeenCalledWith("keyboard");
     expect(event.preventDefault).toHaveBeenCalledOnce();
   });
 
@@ -51,6 +52,7 @@ describe("continue from the focused switch", () => {
     handlers.pointerdown(pointer());
     handlers.pointerup(pointer({ clientX: 53 }));
     expect(onContinue).toHaveBeenCalledOnce();
+    expect(onContinue).toHaveBeenCalledWith("pointer");
   });
 
   it("ignores unmatched releases, cancelled pointers and non-primary touches", () => {

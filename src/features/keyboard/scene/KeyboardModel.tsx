@@ -10,8 +10,11 @@ import { SwitchInstances } from "./SwitchInstances";
 import { FocusedSwitch } from "./FocusedSwitch";
 import { assemblyPosition, FOCUSED_KEY, KEYBOARD_TILT } from "../model/assembly-motion";
 import { createDissolveEffect } from "../model/dissolve-material";
+import type { KeyboardAppearance } from "../model/keycap-appearance";
+import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 
-type KeyboardModelProps = Readonly<{ plan: AssemblyPlan; registry: KeyRegistry; motion?: SceneMotion; phase?: ExperiencePhase; autoRotate?: boolean }>;
+type KeyboardModelProps = Readonly<{ plan: AssemblyPlan; registry: KeyRegistry; motion?: SceneMotion; phase?: ExperiencePhase; autoRotate?: boolean;
+  appearance?: KeyboardAppearance; onTextInput?: KeyboardTextInputHandler; interactive?: boolean }>;
 const TILT = KEYBOARD_TILT;
 // KSA sockets sit 0.48 units above the common keycap/switch mounting plane.
 const KEYCAP_SOCKET_OFFSET = 0.48;
@@ -89,12 +92,24 @@ function foldedKeyboardScene(source: THREE.Group, definition: KeyboardDefinition
   return { keyboard, materials, dissolves, upper, parts };
 }
 
-export function KeyboardModel({ plan, registry, motion, phase, autoRotate }: KeyboardModelProps) {
+export function KeyboardModel({ plan, registry, motion, phase, autoRotate, appearance, onTextInput, interactive = true }: KeyboardModelProps) {
   const assets = useKeyboardAssets();
+  const colors = assets.definition.colorSets?.[appearance?.preset ?? "White"] ?? assets.definition.colorSet;
   const { keyboard, materials, dissolves, upper, parts } = useMemo(() => foldedKeyboardScene(assets.keyboardScene, assets.definition, assets.commonScene), [assets.keyboardScene, assets.definition, assets.commonScene]);
   const board = useRef<THREE.Group>(null);
   const keyDeck = useRef<THREE.Group>(null);
   const previous = useRef("");
+  useEffect(() => {
+    keyboard.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const color = object.name === "plate" ? colors.plateColor
+        : ["topCaseF", "topCaseB", "bottomCase", "feet"].includes(object.name) ? colors.caseColor : null;
+      if (!color) return;
+      for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+        if (material instanceof THREE.MeshStandardMaterial) material.color.set(color);
+      }
+    });
+  }, [keyboard, colors]);
   useEffect(() => () => {
     materials.forEach((material) => material.dispose());
     dissolves.forEach((entry) => entry.depthMaterial.dispose());
@@ -135,7 +150,10 @@ export function KeyboardModel({ plan, registry, motion, phase, autoRotate }: Key
           bumpMap={assets.bumpMap}
           keyboardOffset={[0, 0, 0]}
           keycap={keycap}
-          palette={assets.definition.colorSet[keycap.colorRole]}
+          palette={colors[keycap.colorRole]}
+          imageTexture={appearance?.imageTexture}
+          onTextInput={onTextInput}
+          interactive={interactive}
           legendAtlas={assets.legendAtlas}
           registry={registry}
           source={keycapSources.get(keycap.capModel)!}

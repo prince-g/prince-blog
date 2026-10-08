@@ -6,6 +6,20 @@ import { KEY_TRAVEL, stepKeyAnimation } from "../animation/key-animation";
 import type { KeyRegistry } from "../interaction/key-registry";
 import { FOCUSED_KEY, focusSwitchTransform } from "../model/assembly-motion";
 
+const OPEN_HEIGHTS: Readonly<Record<string, number>> = {
+  stem: 2.8, upperhousing: 1.35, stem_magnet: 0, spring: -1.15, housingbase: -2.65, lightRefractor: -3.9,
+};
+
+export function applyFocusedSwitchOpening(parts: Map<string, THREE.Mesh>, open: number, pressY: number) {
+  const progress = THREE.MathUtils.clamp(open, 0, 1);
+  for (const [name, mesh] of parts) {
+    const press = name === "stem" || name === "stem_magnet" ? pressY * (1 - progress) : 0;
+    mesh.position.y = OPEN_HEIGHTS[name] * progress + press;
+  }
+  const spring = parts.get("spring")!;
+  if (spring.morphTargetInfluences) spring.morphTargetInfluences[0] = THREE.MathUtils.clamp(-pressY / KEY_TRAVEL, 0, 1) * (1 - progress);
+}
+
 export function stepFocusedSwitchSpin(angle: number, delta: number, phase: ExperiencePhase, active = true): number {
   if (phase !== "switch" || !active) return angle;
   const next = angle + THREE.MathUtils.clamp(delta, 0, 0.1) * 0.28;
@@ -111,15 +125,12 @@ export function FocusedSwitch({ motion, registry, switchScene, orientation, posi
     // Keep the held angle while returning; focus smoothly restores the original switch orientation.
     spinner.rotation.y = state.angle * motion.focus;
     stepKeyAnimation(animation, delta);
-    parts.get("stem")!.position.y = animation.offsetY;
-    parts.get("stem_magnet")!.position.y = animation.offsetY;
-    const spring = parts.get("spring")!;
-    if (spring.morphTargetInfluences) spring.morphTargetInfluences[0] = THREE.MathUtils.clamp(-animation.offsetY / KEY_TRAVEL, 0, 1);
+    applyFocusedSwitchOpening(parts, motion.switchOpen, animation.offsetY);
   }, -2);
 
   return <primitive
     object={group}
-    onPointerDown={() => { if (motion.focus >= 1) registry.press(FOCUSED_KEY); }}
+    onPointerDown={() => { if (phase === "switch" && motion.focus >= 1) registry.press(FOCUSED_KEY); }}
     onPointerUp={() => registry.release(FOCUSED_KEY)}
     onPointerOut={() => registry.release(FOCUSED_KEY)}
   />;

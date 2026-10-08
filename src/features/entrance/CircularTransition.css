@@ -1,0 +1,4 @@
+.circular-transition { position: absolute; z-index: 30; inset: 0; overflow: hidden; pointer-events: auto; }
+.circular-transition svg { display: block; }
+.circular-transition__edge { fill: #f3e8d7; }
+.circular-transition__circle { fill: #d97757; }

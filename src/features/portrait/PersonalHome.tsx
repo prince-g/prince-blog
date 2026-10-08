@@ -8,7 +8,7 @@ function Arrow({ down = false }: { down?: boolean }) {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={down ? { transform: "rotate(90deg)" } : undefined}><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.6" /></svg>;
 }
 
-export function PersonalHome({ active, onReplay }: { active: boolean; onReplay: () => void }) {
+export function PersonalHome({ active }: { active: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   const hero = useRef<HTMLElement>(null);
   const content = useRef<HTMLElement>(null);
@@ -91,7 +91,6 @@ export function PersonalHome({ active, onReplay }: { active: boolean; onReplay: 
         {menuOpen && <div className="personal-menu-panel">
           <button onClick={toTop}>回到首屏</button>
           <button onClick={() => { setMenuOpen(false); exitHero(); }}>浏览栏目</button>
-          <button onClick={onReplay}>重新体验键盘</button>
         </div>}
       </header>
       <div className="personal-copy" id="portrait-home">

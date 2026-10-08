@@ -3,6 +3,14 @@ import { assemblyTimeline, canEnterSwitch, createSceneMotion, exitTimeline, retu
 import { initialKeyboardHeroRuntimeState, updateKeyboardHeroRuntimeState } from "../src/features/keyboard/scene/KeyboardHero";
 
 describe("keyboard experience gates", () => {
+  it("hands off once and rejects returning or continuing while the page transition runs", () => {
+    const focused = { status: "switch" as const, canvasKey: 0 };
+    const leaving = updateKeyboardHeroRuntimeState(focused, "continue");
+    expect(leaving.status).toBe("leaving");
+    expect(updateKeyboardHeroRuntimeState(leaving, "continue")).toBe(leaving);
+    expect(updateKeyboardHeroRuntimeState(leaving, "back")).toBe(leaving);
+    expect(updateKeyboardHeroRuntimeState({ status: "ready", canvasKey: 0 }, "continue").status).toBe("ready");
+  });
   it("keeps input locked after assets load until the assembly completes", () => {
     const assembling = updateKeyboardHeroRuntimeState(initialKeyboardHeroRuntimeState, "ready");
     expect(assembling.status).toBe("assembling");

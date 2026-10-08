@@ -21,6 +21,9 @@ import { KeyboardModel } from "../src/features/keyboard/scene/KeyboardModel";
 type CapturedHeroProps = Readonly<{
   onReady: () => void;
   onAssembled: () => void;
+  onEnter: (source: "button" | "keyboard") => void;
+  onSwitch: () => void;
+  onContinue?: () => void;
   onRetry: () => void;
   onRuntimeError: (cause: unknown) => void;
   state: { status: string };
@@ -79,6 +82,8 @@ vi.mock("react", async (importOriginal) => ({
   useState: rootHarness.useState,
   useReducer: rootHarness.useReducer,
   useCallback: rootHarness.useCallback,
+  useRef: <T,>(value: T) => ({ current: value }),
+  useEffect: () => {},
 }));
 
 const assetMocks = vi.hoisted(() => ({
@@ -191,6 +196,29 @@ describe("KeyboardHeroState", () => {
 });
 
 describe("keyboard scene errors", () => {
+  it("starts the homepage circular transition immediately and hands off once", () => {
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
+    const onContinue = vi.fn();
+    rootHarness.render(() => <KeyboardHero onContinue={onContinue} />);
+    renderToStaticMarkup(rootHarness.output);
+    const act = (callback: () => void) => {
+      callback();
+      rootHarness.render(() => <KeyboardHero onContinue={onContinue} />);
+      renderToStaticMarkup(rootHarness.output);
+    };
+    act(() => heroContentMocks.props!.onReady());
+    act(() => heroContentMocks.props!.onAssembled());
+    act(() => heroContentMocks.props!.onEnter("button"));
+    act(() => heroContentMocks.props!.onSwitch());
+    act(() => heroContentMocks.props!.onContinue!());
+    expect(heroContentMocks.props!.state.status).toBe("leaving");
+    expect(onContinue).toHaveBeenCalledOnce();
+    act(() => heroContentMocks.props!.onContinue!());
+    expect(onContinue).toHaveBeenCalledOnce();
+    expect(renderToStaticMarkup(heroContentMocks.view)).not.toContain("switch-controls");
+    expect(onContinue).toHaveBeenCalledOnce();
+  });
+
   it("lets model resource failures reach the scene error boundary", () => {
     const failure = new Error("model failed");
     assetMocks.useKeyboardAssets.mockImplementationOnce(() => { throw failure; });
@@ -230,7 +258,7 @@ describe("keyboard scene errors", () => {
     const assemblingBinding = findElement(heroContentMocks.view, ReadyKeyboardBinding);
     expect((assemblingBinding!.props as { ready: boolean }).ready).toBe(false);
     expect(physicalKeyboardMock).not.toHaveBeenCalled();
-    expect(renderToStaticMarkup(heroContentMocks.view)).toContain('aria-valuenow="100"');
+    expect(renderToStaticMarkup(heroContentMocks.view)).toContain('disabled=""');
 
     heroContentMocks.props!.onAssembled();
     renderToStaticMarkup(rootHarness.output);

@@ -8,6 +8,8 @@ import { createKeycapMaterial } from "../model/keycap-material";
 import type { AssemblyKey, KeycapPalette } from "../model/keyboard-types";
 import { FOCUSED_KEY } from "../model/assembly-motion";
 import { createDissolveEffect } from "../model/dissolve-material";
+import { createPointerKeyHandlers } from "../interaction/pointer-keyboard";
+import type { KeyboardTextInputHandler } from "../interaction/physical-keyboard";
 
 type KeycapMeshProps = Readonly<{
   assemblyHeight?: number;
@@ -21,18 +23,43 @@ type KeycapMeshProps = Readonly<{
   source: THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]>;
   motion?: SceneMotion;
   assemblyLift?: number;
+  imageTexture?: THREE.Texture | null;
+  interactive?: boolean;
+  onTextInput?: KeyboardTextInputHandler;
 }>;
 
-export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboardOffset, keycap, legendAtlas, palette, registry, source, motion, assemblyLift = 0 }: KeycapMeshProps) {
+export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboardOffset, keycap, legendAtlas, palette, registry, source, motion, assemblyLift = 0,
+  imageTexture = null, interactive = true, onTextInput }: KeycapMeshProps) {
   const mesh = useRef<THREE.Mesh>(null);
+  const input = useRef({ interactive, onTextInput });
+  input.current = { interactive, onTextInput };
+  const pointer = useMemo(() => createPointerKeyHandlers(registry, keycap.modelKey,
+    (event) => input.current.onTextInput?.(event), () => input.current.interactive), [registry, keycap.modelKey]);
+  useEffect(() => {
+    if (!interactive || typeof window === "undefined") { pointer.reset(); return; }
+    const hidden = () => { if (document.hidden) pointer.reset(); };
+    window.addEventListener("pointermove", pointer.pointermove);
+    window.addEventListener("pointerup", pointer.pointerup);
+    window.addEventListener("pointercancel", pointer.pointercancel);
+    window.addEventListener("blur", pointer.reset);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("pointermove", pointer.pointermove);
+      window.removeEventListener("pointerup", pointer.pointerup);
+      window.removeEventListener("pointercancel", pointer.pointercancel);
+      window.removeEventListener("blur", pointer.reset);
+      document.removeEventListener("visibilitychange", hidden);
+      pointer.reset();
+    };
+  }, [interactive, pointer]);
   const animation = registry.getAnimation(keycap.modelKey);
   const baseY = keyboardOffset[1] + keycap.position.y + assemblyHeight;
   const { material, dissolve } = useMemo(
     () => {
-      const material = createKeycapMaterial(keycap, palette, legendAtlas, bumpMap, atlasTransform);
+      const material = createKeycapMaterial(keycap, palette, legendAtlas, bumpMap, atlasTransform, imageTexture);
       return { material, dissolve: createDissolveEffect(material, true) };
     },
-    [keycap, palette, legendAtlas, bumpMap, atlasTransform],
+    [keycap, palette, legendAtlas, bumpMap, atlasTransform, imageTexture],
   );
   useEffect(() => () => { material.dispose(); dissolve.depthMaterial.dispose(); }, [material, dissolve]);
   useEffect(() => registry.register(keycap.modelKey, {
@@ -55,6 +82,9 @@ export function KeycapMesh({ assemblyHeight = 0, atlasTransform, bumpMap, keyboa
   return <mesh
     ref={mesh}
     name={keycap.modelKey}
+    onPointerDown={(event) => { if (interactive) { event.stopPropagation(); pointer.pointerdown(event.nativeEvent); } }}
+    onPointerUp={(event) => pointer.pointerup(event.nativeEvent)}
+    onPointerCancel={(event) => pointer.pointercancel(event.nativeEvent)}
     geometry={source.geometry}
     material={material}
     customDepthMaterial={dissolve.depthMaterial}

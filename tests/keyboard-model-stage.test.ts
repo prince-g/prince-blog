@@ -35,7 +35,7 @@ describe("KeyboardModel stage", () => {
     const source = new THREE.Group();
     source.add(node("bottomCase", 49), node("topCaseF", 0), node("topCaseL", 0), node("misc", -8), node("plate", 20));
     assetMocks.useKeyboardAssets.mockReturnValue({ keyboardScene: source, keycapScene: new THREE.Group(), definition: parseKeyboardData(keyboardData) });
-    const motion: SceneMotion = { assembly: 1, reveal: 0.5, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const motion: SceneMotion = { assembly: 1, reveal: 0.5, capExit: 0, switchExit: 0, focus: 0, boardExit: 0, switchOpen: 0 };
     const view = KeyboardModel({ plan: { keys: [], keycapModels: new Set() }, registry: new KeyRegistry(), motion });
     const boardElement = view.props.children[0];
     const board = new THREE.Group(), deck = new THREE.Group();

@@ -598,8 +598,8 @@ export default function PortfolioExperience({ scroller }: { scroller: RefObject<
         </article>
       </div>
       <svg className="absolute inset-0 w-full h-full z-[2] opacity-40 pointer-events-none" fill="none" stroke="black" strokeWidth="1">
-        <path d="M90 220 C 360 110, 690 420, 1040 190" stroke-dasharray="6 10" />
-        <path d="M120 680 C 420 520, 760 740, 1160 480" stroke-dasharray="6 10" />
+        <path d="M90 220 C 360 110, 690 420, 1040 190" strokeDasharray="6 10" />
+        <path d="M120 680 C 420 520, 760 740, 1160 480" strokeDasharray="6 10" />
       </svg>
     </section>
     <section id="support" className="poster-section h-screen bg-[#4F46E5] divider-grid px-5 md:px-8 flex items-center">

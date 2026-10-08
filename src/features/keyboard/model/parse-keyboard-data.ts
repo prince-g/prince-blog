@@ -1,4 +1,4 @@
-import type { KeyboardDefinition, KeyboardKeyDefinition, Vector3Data, KeycapPalette } from "./keyboard-types";
+import { KEYBOARD_PRESETS, type KeyboardDefinition, type KeyboardKeyDefinition, type Vector3Data, type KeycapPalette, type KeyboardColorSet, type KeyboardPresetId } from "./keyboard-types";
 
 export class KeyboardDataError extends Error {
   constructor(message: string) {
@@ -99,21 +99,28 @@ export function parseKeyboardData(input: unknown): KeyboardDefinition {
     if (!foldedPositions[name]) throw new KeyboardDataError(`unfoldPosition.${name}.from is required`);
   }
   const sets = input.colorSets;
-  if (!isRecord(sets) || !isRecord(sets.White) || !isRecord(sets.White.colorSet)) {
-    throw new KeyboardDataError("colorSets.White.colorSet is required");
-  }
-  const colors = sets.White.colorSet;
+  if (!isRecord(sets)) throw new KeyboardDataError("colorSets is required");
   const color = (value: unknown, path: string): string => {
     if (typeof value !== "string" || !/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value)) {
       throw new KeyboardDataError(`${path} must be a hex color`);
     }
     return value;
   };
-  const palette = (name: string): KeycapPalette => {
-    const entry = colors[name];
-    if (!isRecord(entry)) throw new KeyboardDataError(`colorSet.${name} is required`);
-    return Object.freeze({ keycapColor: color(entry.keycapColor, `${name}.keycapColor`), fontColor: color(entry.fontColor, `${name}.fontColor`) });
-  };
+  const colorSets = Object.fromEntries(KEYBOARD_PRESETS.map((preset) => {
+    const set = sets[preset];
+    if (!isRecord(set) || !isRecord(set.colorSet)) throw new KeyboardDataError(`colorSets.${preset}.colorSet is required`);
+    const colors = set.colorSet;
+    const path = `colorSets.${preset}.colorSet`;
+    const palette = (name: string): KeycapPalette => {
+      const entry = colors[name];
+      if (!isRecord(entry)) throw new KeyboardDataError(`${path}.${name} is required`);
+      return Object.freeze({ keycapColor: color(entry.keycapColor, `${path}.${name}.keycapColor`), fontColor: color(entry.fontColor, `${path}.${name}.fontColor`) });
+    };
+    return [preset, Object.freeze({
+      primaryColor: palette("primaryColor"), secondaryColor: palette("secondaryColor"), highlightColor: palette("highlightColor"),
+      caseColor: color(colors.caseColor, `${path}.caseColor`), plateColor: color(colors.plateColor, `${path}.plateColor`),
+    })];
+  })) as Record<KeyboardPresetId, KeyboardColorSet>;
 
   return Object.freeze({
     keyboardOffset: Object.freeze([
@@ -130,12 +137,7 @@ export function parseKeyboardData(input: unknown): KeyboardDefinition {
     switchOrientation,
     keyPosition: Object.freeze(keyPosition),
     foldedPositions: Object.freeze(foldedPositions),
-    colorSet: Object.freeze({
-      primaryColor: palette("primaryColor"),
-      secondaryColor: palette("secondaryColor"),
-      highlightColor: palette("highlightColor"),
-      caseColor: color(colors.caseColor, "caseColor"),
-      plateColor: color(colors.plateColor, "plateColor"),
-    }),
+    colorSet: colorSets.White,
+    colorSets: Object.freeze(colorSets),
   });
 }

@@ -25,6 +25,7 @@ async function mountKeys() {
   const definition = parseKeyboardData(keyboardData);
   const keys = buildAssemblyPlan(definition).keys.filter((key) => ["KeyA", "Space"].includes(key.modelKey));
   const registry = new KeyRegistry();
+  const textInput = vi.fn();
   const source = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
   const atlas = new THREE.Texture();
   const normal = new THREE.Texture();
@@ -42,6 +43,7 @@ async function mountKeys() {
       bumpMap: normal,
       source,
       registry,
+      onTextInput: textInput,
     }))));
     await Promise.resolve();
   });
@@ -52,7 +54,7 @@ async function mountKeys() {
   const handlers = createPhysicalKeyboardHandlers(registry);
   let time = 0;
   return {
-    a, space, handlers,
+    a, space, handlers, registry, textInput,
     down(code: string, repeat = false) { handlers.keydown({ code, repeat, target: null }); },
     up(code: string) { handlers.keyup({ code, repeat: false, target: null }); },
     frame(count = 1) {
@@ -77,6 +79,25 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("physical keys through the KeycapMesh render loop", () => {
+  it("clicks a real keycap mesh with the same travel as physical input and commits one character", async () => {
+    const mounted = await mountKeys();
+    try {
+      const rest = mounted.a.position.y;
+      const key = mounted.a as THREE.Mesh & { __r3f: { handlers: Record<string, (event: unknown) => void> } };
+      const event = { nativeEvent: { pointerId: 4, clientX: 200, clientY: 300, button: 0, isPrimary: true }, stopPropagation() {} };
+      key.__r3f.handlers.onPointerDown(event);
+      mounted.frame();
+      expect(mounted.a.position.y).toBeLessThan(rest - 0.1);
+      mounted.down("KeyA");
+      key.__r3f.handlers.onPointerUp(event);
+      expect(mounted.registry.getAnimation("KeyA").pressed).toBe(true);
+      expect(mounted.textInput).toHaveBeenCalledExactlyOnceWith({ key: "a" });
+      key.__r3f.handlers.onPointerUp(event);
+      expect(mounted.textInput).toHaveBeenCalledTimes(1);
+      mounted.up("KeyA"); mounted.frame(90);
+      expect(mounted.a.position.y).toBe(rest);
+    } finally { await mounted.unmount(); }
+  });
   it("renders intermediate depression, holds through repeat events, and releases only the active key", async () => {
     const mounted = await mountKeys();
     try {

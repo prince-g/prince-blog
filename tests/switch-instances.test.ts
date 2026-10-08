@@ -89,7 +89,7 @@ async function mountSwitches(switchScene = createSwitchScene(), motion?: SceneMo
         motion,
       }),
       includeFocus && motion && createElement(FocusedSwitch, {
-        motion, registry, switchScene, orientation: "north", position: new THREE.Vector3(0.472, 2.13, 1.19),
+        motion, registry, switchScene, orientation: "north", position: new THREE.Vector3(0.472, 2.13, 1.19), phase: "switch",
       }),
       includeFocus && motion && createElement(KeycapMesh, {
         motion, registry, keycap: plan.keys.find((key) => key.modelKey === "KeyJ")!,
@@ -127,7 +127,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("SwitchInstances", () => {
   it("keeps the focused switch in world space and advances a clicked J stroke exactly once", async () => {
-    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 1, switchExit: 1, focus: 1, boardExit: 1 };
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 1, switchExit: 1, focus: 1, boardExit: 1, switchOpen: 0 };
     const mounted = await mountSwitches(createSwitchScene(), motion, true);
     try {
       const focused = mounted.scene.getObjectByName("focusedSwitch") as THREE.Group & { __r3f: { handlers: Record<string, () => void> } };
@@ -147,7 +147,7 @@ describe("SwitchInstances", () => {
     } finally { await mounted.unmount(); }
   });
   it("flies every component out while retaining J until its focused replacement appears", async () => {
-    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0, switchOpen: 0 };
     const mounted = await mountSwitches(createSwitchScene(), motion);
     try {
       mounted.frame();
@@ -191,7 +191,7 @@ describe("SwitchInstances", () => {
     } finally { await mounted.unmount(); }
   });
   it("dissolves keycap surfaces and their shadows without making their shells translucent", async () => {
-    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+    const motion: SceneMotion = { assembly: 0, reveal: 1, capExit: 0, switchExit: 0, focus: 0, boardExit: 0, switchOpen: 0 };
     const mounted = await mountSwitches(createSwitchScene(), motion, true);
     try {
       mounted.frame();

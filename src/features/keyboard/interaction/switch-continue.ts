@@ -7,14 +7,14 @@ function isControl(target: EventTarget | null) {
 }
 
 /** Keep the focused switch draggable; only a fresh key or a click completes the scene. */
-export function createSwitchContinueHandlers(onContinue: () => void) {
+export function createSwitchContinueHandlers(onContinue: (source: "keyboard" | "pointer") => void) {
   let completed = false;
   let pointer: { id: number; x: number; y: number; dragged: boolean } | null = null;
-  const complete = () => {
+  const complete = (source: "keyboard" | "pointer") => {
     if (completed) return;
     completed = true;
     pointer = null;
-    onContinue();
+    onContinue(source);
   };
   const moved = (event: PointerInput) => {
     if (pointer?.id === event.pointerId && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 8) pointer.dragged = true;
@@ -25,7 +25,7 @@ export function createSwitchContinueHandlers(onContinue: () => void) {
         || event.ctrlKey || event.metaKey || event.altKey || isControl(event.target)
         || /^(Tab|Shift|Control|Alt|Meta|OS|ContextMenu|Unidentified|Process|Dead|F\d{1,2})$/.test(event.key)) return;
       event.preventDefault();
-      complete();
+      complete("keyboard");
     },
     pointerdown(event: PointerInput) {
       if (completed || !event.isPrimary || isControl(event.target)) { pointer = null; return; }
@@ -36,7 +36,7 @@ export function createSwitchContinueHandlers(onContinue: () => void) {
       moved(event);
       const clicked = pointer?.id === event.pointerId && !pointer.dragged && !isControl(event.target);
       pointer = null;
-      if (clicked) complete();
+      if (clicked) complete("pointer");
     },
     reset() { pointer = null; },
   };

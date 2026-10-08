@@ -86,6 +86,7 @@ describe("app shell", () => {
     expect(scene).toMatch(new RegExp(openingTag("textarea", { "aria-label": "键盘输入内容", disabled: "", tabindex: "-1" })));
     expect(elementContent(scene, "div", { class: "typing-viewport", "aria-hidden": "true" })).toContain("keyboard-text-input");
     expect(scene).not.toContain('aria-label="进入磁轴展示"');
+    expect(scene).toContain("POWER ON");
 
     const contentOrder = [
       elementStart(main, "a", { href: "#main-content" }),

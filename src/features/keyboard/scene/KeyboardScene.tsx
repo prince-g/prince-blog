@@ -140,7 +140,9 @@ export function KeyboardScene({ registry, resetRequest, onReady, onRuntimeError,
       />
       <hemisphereLight color="#ffffff" groundColor="#dad2c5" intensity={0.35} />
       <group ref={product}>
-        <KeyboardModel plan={plan} registry={registry} motion={experience?.motion} phase={experience?.phase} autoRotate={experience?.autoRotate} />
+        <KeyboardModel plan={plan} registry={registry} motion={experience?.motion} phase={experience?.phase} autoRotate={experience?.autoRotate}
+          appearance={experience?.appearance} onTextInput={experience?.onTextInput}
+          interactive={!experience || (experience.phase === "ready" && !experience.interactionDisabled)} />
       </group>
       <KeyboardGround motion={experience?.motion} />
       <CameraRig onError={onRuntimeError} resetRequest={resetRequest} phase={experience?.phase} motion={experience?.motion} />

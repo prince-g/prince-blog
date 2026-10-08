@@ -1,8 +1,36 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
-import { createFocusedSwitchScene, stepFocusedSwitchSpin } from "../src/features/keyboard/scene/FocusedSwitch";
+import { applyFocusedSwitchOpening, createFocusedSwitchScene, stepFocusedSwitchSpin } from "../src/features/keyboard/scene/FocusedSwitch";
 
 describe("focused magnetic switch resources", () => {
+  it("separates six parts around the magnet without changing shared source meshes or geometry", () => {
+    const source = new THREE.Group();
+    for (const name of ["upperhousing", "housingbase", "stem", "spring", "stem_magnet", "lightRefractor"]) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
+      mesh.name = name;
+      source.add(mesh);
+    }
+    const scene = createFocusedSwitchScene(source, "south");
+    applyFocusedSwitchOpening(scene.parts, 1, -0.3);
+    const y = (name: string) => scene.parts.get(name)!.position.y;
+    expect(y("stem")).toBeGreaterThan(y("upperhousing"));
+    expect(y("upperhousing")).toBeGreaterThan(y("stem_magnet"));
+    expect(y("stem_magnet")).toBeGreaterThan(y("spring"));
+    expect(y("spring")).toBeGreaterThan(y("housingbase"));
+    expect(y("housingbase")).toBeGreaterThan(y("lightRefractor"));
+    expect(y("stem") - y("lightRefractor") + 1).toBeLessThan(10);
+    for (const original of source.children as THREE.Mesh[]) {
+      expect(original.position.toArray()).toEqual([0, 0, 0]);
+      expect(original.geometry.boundingBox).toBeNull();
+      expect(scene.parts.get(original.name)!.geometry).toBe(original.geometry);
+    }
+    applyFocusedSwitchOpening(scene.parts, 0, -0.3);
+    expect(y("stem")).toBe(-0.3);
+    expect(y("stem_magnet")).toBe(-0.3);
+    expect(y("upperhousing")).toBe(0);
+    scene.materials.forEach((material) => material.dispose());
+  });
+
   it("shares the six source geometries but owns materials and preserves transparent housing", () => {
     const source = new THREE.Group();
     for (const name of ["upperhousing", "housingbase", "stem", "spring", "stem_magnet", "lightRefractor"]) {
@@ -38,7 +66,7 @@ describe("focused switch auto rotation", () => {
     let angle = 0;
     for (let frame = 0; frame < 60; frame++) angle = stepFocusedSwitchSpin(angle, 1 / 60, "switch");
     expect(angle).toBeCloseTo(0.28);
-    for (const phase of ["loading", "assembling", "ready", "exiting", "returning"] as const) {
+    for (const phase of ["loading", "assembling", "ready", "exiting", "returning", "leaving"] as const) {
       expect(stepFocusedSwitchSpin(angle, 1 / 60, phase)).toBe(angle);
     }
     expect(stepFocusedSwitchSpin(angle, 1 / 60, "switch", false)).toBe(angle);

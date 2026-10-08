@@ -8,6 +8,14 @@ type DocumentVisibility = Pick<Document, "visibilityState">;
 export type KeyboardTextInputHandler = (event: Pick<KeyboardEvent, "key">) => void;
 
 const editableTags = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+const controlTags = new Set(["BUTTON", "A", "SELECT"]);
+
+function isControlTarget(target: EventTarget | null) {
+  if (!target || typeof target !== "object") return false;
+  const candidate = target as { tagName?: string; closest?: (selector: string) => unknown };
+  return controlTags.has(candidate.tagName ?? "")
+    || Boolean(candidate.closest?.("button,a,select,[role='button'],[role='link']"));
+}
 
 function isEditableTarget(target: EventTarget | null) {
   if (!target || typeof target !== "object") return false;
@@ -26,7 +34,7 @@ export function createPhysicalKeyboardHandlers(
 ) {
   return {
     keydown(event: KeyboardEventData) {
-      if (event.repeat) return;
+      if (event.repeat || isControlTarget(event.target)) return;
       if (!isEditableTarget(event.target) && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey) onTextInput?.({ key: event.key ?? "" });
       const modelKey = modelKeyFor(event.code);
       if (modelKey) registry.press(modelKey);

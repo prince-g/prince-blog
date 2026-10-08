@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 
-export type ExperiencePhase = "loading" | "assembling" | "ready" | "exiting" | "switch" | "returning";
+export type ExperiencePhase = "loading" | "assembling" | "ready" | "exiting" | "switch" | "returning" | "leaving";
 
 /** Mutable animation values shared by the scene; React only owns phase boundaries. */
 export type SceneMotion = {
@@ -10,10 +10,11 @@ export type SceneMotion = {
   switchExit: number;
   focus: number;
   boardExit: number;
+  switchOpen: number;
 };
 
 export function createSceneMotion(): SceneMotion {
-  return { assembly: 1, reveal: 0, capExit: 0, switchExit: 0, focus: 0, boardExit: 0 };
+  return { assembly: 1, reveal: 0, capExit: 0, switchExit: 0, focus: 0, boardExit: 0, switchOpen: 0 };
 }
 
 export function canEnterSwitch(phase: ExperiencePhase, text: string, source: "button" | "keyboard") {

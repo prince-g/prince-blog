@@ -19,7 +19,7 @@ export function usePhysicalKeyboard(registry: KeyRegistry, onTextInput?: Keyboar
       window.removeEventListener("keyup", handlers.keyup);
       window.removeEventListener("blur", handlers.blur);
       document.removeEventListener("visibilitychange", visibilitychange);
-      registry.releaseAll();
+      registry.releaseAll(false);
     };
   }, [registry]);
 }

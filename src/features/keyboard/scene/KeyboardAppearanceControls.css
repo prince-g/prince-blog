@@ -1,0 +1,58 @@
+.keyboard-appearance {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: clamp(14px, 2.6vh, 26px);
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  color: #52555b;
+  font: 400 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+.keyboard-appearance-options { display: flex; align-items: center; justify-content: center; gap: 3px; }
+.keyboard-appearance button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  transition: background-color 140ms ease-out;
+}
+.keyboard-appearance button:hover { background: #eeeff1; }
+.keyboard-appearance button:disabled { opacity: 0.55; cursor: wait; }
+.keyboard-appearance button:focus-visible { outline: 2px solid #585f6b; outline-offset: 2px; }
+.keyboard-swatch-color {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #babcc0;
+  border-radius: 50%;
+}
+.keyboard-swatch[aria-pressed="true"] .keyboard-swatch-color,
+.keyboard-image-swatch[aria-pressed="true"] img { outline: 1px solid #373b41; outline-offset: 4px; }
+.keyboard-swatch-color.is-White { background: linear-gradient(135deg, #d9ae74 0 42%, #f2f2f0 42%); }
+.keyboard-swatch-color.is-PureWhite { background: #f2f2f0; }
+.keyboard-swatch-color.is-Black { background: linear-gradient(135deg, #d9ae74 0 42%, #222 42%); }
+.keyboard-swatch-color.is-PureBlack { background: #222; }
+.keyboard-image-swatch img { width: 26px; height: 26px; object-fit: cover; border-radius: 50%; }
+.keyboard-appearance-divider { height: 18px; width: 1px; flex: 0 0 1px; background: #d8dade; margin-inline: 7px; }
+.keyboard-appearance .keyboard-image-upload { gap: 7px; padding-inline: 8px; white-space: nowrap; }
+.keyboard-appearance .keyboard-image-remove { min-width: 44px; color: #6b6f76; }
+.keyboard-appearance-note { margin: 5px 0 0; text-align: center; text-wrap: balance; }
+.keyboard-appearance-note.is-error { color: #a12e23; }
+@media (max-width: 600px) {
+  .keyboard-appearance { bottom: 91px; width: max-content; max-width: calc(100% - 24px); }
+  .keyboard-appearance-options { gap: 0; flex-wrap: wrap; }
+  .keyboard-appearance-divider { margin-inline: 4px; }
+  .keyboard-appearance .keyboard-image-upload { padding-inline: 4px; gap: 5px; }
+  .keyboard-appearance .keyboard-image-remove { min-width: 44px; }
+  .keyboard-appearance-note { font-size: 11px; margin-top: 3px; }
+}
+@media (prefers-reduced-motion: reduce) { .keyboard-appearance button { transition: none; } }

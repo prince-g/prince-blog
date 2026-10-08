@@ -57,6 +57,18 @@ afterEach(() => {
 });
 
 describe("physical keyboard", () => {
+  it("leaves focused buttons and their children to their own controls", () => {
+    const registry = new KeyRegistry();
+    const onTextInput = vi.fn();
+    const handlers = createPhysicalKeyboardHandlers(registry, onTextInput);
+    for (const target of [
+      Object.assign(new EventTarget(), { tagName: "BUTTON" }),
+      Object.assign(new EventTarget(), { closest: () => ({ tagName: "BUTTON" }) }),
+    ]) handlers.keydown({ code: "Enter", key: "Enter", repeat: false, target });
+    expect(onTextInput).not.toHaveBeenCalled();
+    expect(registry.getAnimation("Enter").pressed).toBe(false);
+  });
+
   it("presses and releases only the matching key", () => {
     const registry = new KeyRegistry();
     const a = actuator(); const b = actuator();
@@ -182,6 +194,8 @@ describe("physical keyboard", () => {
     vi.stubGlobal("window", windowTarget);
     vi.stubGlobal("document", documentTarget);
     const registry = new KeyRegistry(); const a = actuator(); registry.register("KeyA", a);
+    const audio = { unlock: vi.fn(), play: vi.fn(), stop: vi.fn() };
+    registry.setAudio(audio);
 
     usePhysicalKeyboard(registry);
     expect(windowTarget.count("keydown")).toBe(1);
@@ -198,5 +212,6 @@ describe("physical keyboard", () => {
     expect(windowTarget.count("blur")).toBe(0);
     expect(documentTarget.count("visibilitychange")).toBe(0);
     expect(a.reset).toHaveBeenCalledOnce();
+    expect(audio.stop).not.toHaveBeenCalled();
   });
 });
